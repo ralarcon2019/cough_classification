@@ -8,12 +8,12 @@ User = get_user_model()
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         email = ''
-        username='ralarcon'
+        username = 'ralarcon'
         new_password = get_random_string(10)
         try:
             if not User.objects.filter(is_superuser=True).exists():
                 self.stdout.write("No superusers found, creating one")
-                User.objects.create_superuser(username=username', email=email, password=new_password)
+                User.objects.create_superuser(username=username, email=email, password=new_password)
                 self.stdout.write("=======================")
                 self.stdout.write("A superuser has been created")
                 self.stdout.write(f"Username: {username}")

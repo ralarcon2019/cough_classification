@@ -42,7 +42,8 @@
                     <div class="card-body">
                         <h5 class="card-title fw-bold">Plan (Sep 4)</h5>
                         <a href="" class="btn btn-primary d-block mb-2"  role="button"> Plan </a>
-                        <a href="/media/documents/Project Plan Fall 2024 Presentation.pdf" class="btn btn-primary d-block mb-2"  role="button"> Presentation </a>
+                        <a href="{% url 'main:open_file' file1 %}" class="btn btn-primary d-block mb-2" role="button" target="_blank"> Presentation </a>
+                        <!-- <a href="/media/documents/Project Plan Fall 2024 Presentation.pdf" class="btn btn-primary d-block mb-2"  role="button"> Presentation </a> -->
                     </div>
                 </div>
             </div>
@@ -60,6 +61,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Milestone 2 -->
             <div class="col-md-3">
                 <div class="card h-100 shadow">

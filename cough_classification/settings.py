@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "main",
     "users",
+    "MLContainer",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'

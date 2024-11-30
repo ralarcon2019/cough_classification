@@ -7,6 +7,89 @@
 {% endblock title %}
 
 {% block content %}
-home
+<div class="container my-5">
+  <!-- Logo Section -->
+  <div class="text-center mb-4">
+    <h1 class="display-4">VOCOVID</h1>
+  </div>
+
+  <!-- Mission Statement Section -->
+  <div class="text-center mb-5">
+    <h2 class="mb-3">Our Mission</h2>
+    <p class="lead">
+      VOCOVID is dedicated to providing information to users to better inform
+      their medical decisions prior to visiting a hospital or urgent care locally.
+    </p>
+  </div>
+
+  <!-- Further Explanation -->
+  <div class="mb-5">
+    <h3>What is VOCOVID?</h3>
+    <p>
+      By providing results based on a convolutional neural network trained on a
+      dataset labeled by licensed doctors, VOCOVID is equipped to inform users
+      of when they are exhibiting COVID-19 symptoms as opposed to symptoms of another
+      illness.
+    </p>
+  </div>
+
+  <!-- Use Cases Explanation -->
+  <div class="mb-5">
+    <h3>How Does It Work?</h3>
+    <div class="row">
+      <!-- Healthy -->
+      <div class="col-md-4 text-center">
+        <h4>Healthy</h4>
+        <p>Your recording indicates that you do not have COVID, or another type of illness.</p>
+      </div>
+      <!-- COVID-19 -->
+      <div class="col-md-4 text-center">
+        <h4>COVID-19</h4>
+        <p>
+          Your recording indicates that you are showing symptoms of COVID-19. If
+          you receive this result, please visit your local urgent care immediately
+          to receive further medical attention.
+        </p>
+      </div>
+      <!-- Symptomatic -->
+      <div class="col-md-4 text-center">
+        <h4>Symptomatic</h4>
+        <p>
+          Your recording indicates that you do not have symptoms of COVID-19,
+          but that you are displaying symptoms of a different illness. Please visit
+          your local urgent care for further attention.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Example Portal -->
+  <div class="mb-5">
+    <h3>Why Use VOCOVID?</h3>
+    <p>
+      VOCOVID presents results in a simple and easy-to-understand format to keep
+      you from stressing with a developing sickness. All results will be displayed
+      with an updating graph so you can see the progression of your illness in real time.
+    </p>
+    <!-- Placeholder for portal image -->
+    <div class="text-center">
+      <img src="/static/example_portal.png" alt="User Portal Example" class="img-fluid rounded shadow">
+    </div>
+  </div>
+
+  <!-- Disclaimer -->
+  <div class="text-center mt-5">
+    <p class="text-muted">
+      VOCOVID is a screening tool and cannot provide an official COVID-19 diagnosis.
+      Please consult a medical professional for an official diagnosis.
+    </p>
+    <p>
+      For more information on how VOCOVID works, visit the research page
+
+    </p>
+  </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock content %}

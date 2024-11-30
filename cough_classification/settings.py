@@ -29,6 +29,21 @@ import os
 # DEBUG = True
 # ALLOWED_HOSTS = []
 
+env = environ.Env()
+
+MEDIA_S3_ACCESS_KEY_ID = env('MEDIA_S3_ACCESS_KEY_ID', default=None)
+MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
+MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "cough_classification.storages.PublicMediaStorage"
+        },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 
 #NEW CONTENT
@@ -170,8 +185,14 @@ USE_TZ = True
 
 
 #NEW CONTENT
-MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR / "media")
-MEDIA_URL = env("MEDIA_PATH", default="/media/")
+# MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR / "media")
+# MEDIA_URL = env("MEDIA_PATH", default="/media/")
+
+MEDIA_ROOT = 'media'
+MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
+MEDIA_URL = f'https://{MEDIA_HOST}/'
+
+
 # MEDIA_URL = 'media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
 

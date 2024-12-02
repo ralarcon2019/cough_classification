@@ -8,8 +8,10 @@ def project(request):
         'projectPlanPres': 'documents/Project Plan Fall 2024 Presentation.pdf',
         'milestone1Eval': 'documents/Milestone One Progress Evaluation.pdf',
         'milestone1Pres': 'documents/Milestone One Fall 2024 Senior Design.pdf',
-        'milestone2Pres': 'documents/Milestone Two Fall 2024 Senior Design.pdf',
         'milestone2Eval': 'documents/Milestone Two Progress Evaluation.pdf',
+        'milestone2Pres': 'documents/Milestone Two Fall 2024 Senior Design.pdf',
+        'milestone3Eval': 'documents/Milestone Three Progress Evaluation.pdf',
+        'milestone3Pres': 'documents/Milestone Three Fall 2024 Senior Design.pdf',
         'projectPlan': 'documents/Project Plan.pdf',
         'webTesting': 'documents/Web Testing Plan.pdf',
     }

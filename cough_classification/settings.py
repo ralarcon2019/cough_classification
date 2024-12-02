@@ -49,7 +49,7 @@ MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
 #NEW CONTENT
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False)
+    DEBUG=(bool, True)
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent

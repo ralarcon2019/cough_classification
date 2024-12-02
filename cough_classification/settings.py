@@ -36,14 +36,14 @@ MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
 MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
 
 
-STORAGES = {
-    "default": {
-        "BACKEND": "cough_classification.storages.PublicMediaStorage"
-        },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
+# STORAGES = {
+#     "default": {
+#         "BACKEND": "cough_classification.storages.PublicMediaStorage"
+#         },
+#     "staticfiles": {
+#         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+#         },
+#     }
 
 
 #NEW CONTENT
@@ -58,7 +58,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 SECRET_KEY = env("SECRET_KEY", default="change_me")
 
-DEBUG = env("DEBUG", default=False)
+DEBUG = env("DEBUG", default=True)
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
 
@@ -188,9 +188,34 @@ USE_TZ = True
 # MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR / "media")
 # MEDIA_URL = env("MEDIA_PATH", default="/media/")
 
-MEDIA_ROOT = 'media'
-MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
-MEDIA_URL = f'https://{MEDIA_HOST}/'
+# MEDIA_ROOT = 'media'
+# MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
+# MEDIA_URL = f'https://{MEDIA_HOST}/'
+
+
+
+
+if DEBUG:  # Only for local development
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+else:
+    MEDIA_ROOT = 'media'
+    MEDIA_URL = f'https://{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com/'
+    MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
+    CUSTOM_MEDIA_DOMAIN = env('d16tatg3lec94w.cloudfront.net', default=None)
+
+    if CUSTOM_MEDIA_DOMAIN:
+        MEDIA_HOST = CUSTOM_MEDIA_DOMAIN
+
+    MEDIA_URL = f'https://{MEDIA_HOST}/'
+
+    
+    
+
+
+
+
 
 
 # MEDIA_URL = 'media/'

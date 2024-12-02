@@ -16,7 +16,7 @@ def project(request):
     return render(request, 'main/project.html', context)
 
 def serve_file(request, file_path):
-    file_full_path = os.path.join('media', file_path)
+    file_full_path = os.path.join('static', file_path)
     if os.path.exists(file_full_path):
         return FileResponse(open(file_full_path, 'rb'))
     else:
@@ -24,6 +24,10 @@ def serve_file(request, file_path):
 
 def home(request):
     return render(request, 'main/home.html')
+
+
+def research(request):
+    return render(request, 'main/research.html')
 
 
 # def open_file(request, *args, **kwargs):

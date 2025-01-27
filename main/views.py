@@ -5,6 +5,7 @@ import os
 
 def project(request):
     context = {
+        'projectPlan2Pres': 'documents/Project Plan Spring 2025 Presentation.pdf',
         'projectPlanPres': 'documents/Project Plan Fall 2024 Presentation.pdf',
         'milestone1Eval': 'documents/Milestone One Progress Evaluation.pdf',
         'milestone1Pres': 'documents/Milestone One Fall 2024 Senior Design.pdf',
@@ -13,6 +14,7 @@ def project(request):
         'milestone3Eval': 'documents/Milestone Three Progress Evaluation.pdf',
         'milestone3Pres': 'documents/Milestone Three Fall 2024 Senior Design.pdf',
         'projectPlan': 'documents/Project Plan.pdf',
+        'projectPlan2': 'documents/Project Plan Spring.pdf',
         'webTesting': 'documents/Web Testing Plan.pdf',
     }
     return render(request, 'main/project.html', context)

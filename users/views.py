@@ -1,9 +1,13 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import login, logout
 from users.models import AudioRecording
 from django.http import JsonResponse
+
+from django.conf import settings
+User = settings.AUTH_USER_MODEL
 
 
 # Create your views here.
@@ -53,3 +57,18 @@ def upload_audio(request):
             return JsonResponse({"message": "Audio uploaded successfully!", "file_url": recording.file.url})
         return JsonResponse({"error": "No file uploaded."}, status=400)
     return JsonResponse({"error": "Unauthorized or invalid request"}, status=403)
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()  # Save user to Database
+            # Get the username that is submitted
+            username = form.cleaned_data.get('username')
+            # Show sucess message when account is created
+            messages.success(request, f'Account created for {username}!')
+            return redirect('blog-home')  # Redirect user to Homepage
+    else:
+        form = UserRegisterForm()
+    return render(request, 'users/register.html', {'form': form})

@@ -156,7 +156,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "users.CustomUser"  # new
+AUTH_USER_MODEL = "users.Users"  # new
 
 
 # NEW CONTENT

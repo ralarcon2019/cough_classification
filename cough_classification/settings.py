@@ -26,9 +26,7 @@ import dj_database_url
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = "django-insecure-x3!p+09)do=vu#py97vx_cm6!v!u*q6@87*=z2@^zc8to4=#b#"
-# SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-# ALLOWED_HOSTS = []
+
 
 env = environ.Env()
 
@@ -37,21 +35,7 @@ MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
 MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
 
 
-# STORAGES = {
-#     "default": {
-#         "BACKEND": "cough_classification.storages.PublicMediaStorage"
-#         },
-#     "staticfiles": {
-#         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-#         },
-#     }
 
-
-#NEW CONTENT
-env = environ.Env(
-    # set casting, default value
-    DEBUG=(bool, True)
-)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Take environment variables from .env file
@@ -138,17 +122,20 @@ WSGI_APPLICATION = "cough_classification.wsgi.application"
 #     }
 # }
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# DATABASE_URL = "postgresql://mysuperuser:DjangoDBPass23##@applikudjango.cpgg0mgau32j.us-east-1.rds.amazonaws.com:5432/applikudjango"
 
-#NEW CONTENT
-# DATABASES = {
-#     "default": env.db(default="sqlite:///db.sqlite3"),
-# }
+# NEW CONTENT
+DATABASES = {
+    "default": env.db(default="sqlite://db.sqlite3")
+}
+# NEW CONTENT
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {"": {"handlers": ["console"], "level": "DEBUG"}},
+}
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -170,18 +157,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "users.Users"  # new
 
-
-# NEW CONTENT
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-
-# NEW CONTENT
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"": {"handlers": ["console"], "level": "DEBUG"}},
-}
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -198,53 +173,43 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 
-#NEW CONTENT
-# MEDIA_ROOT = env("MEDIA_ROOT", default=BASE_DIR / "media")
-# MEDIA_URL = env("MEDIA_PATH", default="/media/")
-
-# MEDIA_ROOT = 'media'
-# MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
-# MEDIA_URL = f'https://{MEDIA_HOST}/'
 
 
+# THIS WORKS
 
+# if DEBUG:  # Only for local development
+#     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+#     MEDIA_URL = '/media/'
+#     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# else:
+#     MEDIA_ROOT = 'media'
+#     MEDIA_URL = f'https://{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com/'
+#     MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
+#     CUSTOM_MEDIA_DOMAIN = env('d16tatg3lec94w.cloudfront.net', default=None)
 
-if DEBUG:  # Only for local development
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-else:
-    MEDIA_ROOT = 'media'
-    MEDIA_URL = f'https://{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com/'
-    MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
-    CUSTOM_MEDIA_DOMAIN = env('d16tatg3lec94w.cloudfront.net', default=None)
+#     if CUSTOM_MEDIA_DOMAIN:
+#         MEDIA_HOST = CUSTOM_MEDIA_DOMAIN
 
-    if CUSTOM_MEDIA_DOMAIN:
-        MEDIA_HOST = CUSTOM_MEDIA_DOMAIN
-
-    MEDIA_URL = f'https://{MEDIA_HOST}/'
+#     MEDIA_URL = f'https://{MEDIA_HOST}/'
 
     
-    
 
-
-
-
-
-
-# MEDIA_URL = 'media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
 
 #NEW CONTENT
 STATIC_URL = env.str("STATIC_URL", default="/static/")
 STATIC_ROOT = env.str("STATIC_ROOT", default=BASE_DIR / "staticfiles")
-# STATIC_URL = 'static/'
-# STATIC_ROOT = BASE_DIR / 'assets'
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = DEBUG
 
 
-STATICFILES_DIRS = [
-    BASE_DIR / 'static'
-]
+
+# STATICFILES_DIRS = [
+#     BASE_DIR / 'static'
+# ]
+
+
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

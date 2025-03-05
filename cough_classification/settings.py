@@ -30,9 +30,9 @@ import dj_database_url
 
 env = environ.Env()
 
-MEDIA_S3_ACCESS_KEY_ID = env('MEDIA_S3_ACCESS_KEY_ID', default=None)
-MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
-MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
+# MEDIA_S3_ACCESS_KEY_ID = env('MEDIA_S3_ACCESS_KEY_ID', default=None)
+# MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
+# MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
 
 
 
@@ -125,9 +125,13 @@ WSGI_APPLICATION = "cough_classification.wsgi.application"
 # DATABASE_URL = "postgresql://mysuperuser:DjangoDBPass23##@applikudjango.cpgg0mgau32j.us-east-1.rds.amazonaws.com:5432/applikudjango"
 
 # NEW CONTENT
+
 DATABASES = {
     "default": env.db(default="sqlite://db.sqlite3")
 }
+db_from_env = os.environ.get("DATABASE_URL")
+DATABASES["default"].update(db_from_env)
+    
 # NEW CONTENT
 LOGGING = {
     "version": 1,

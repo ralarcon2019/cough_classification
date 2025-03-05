@@ -122,7 +122,7 @@ WSGI_APPLICATION = "cough_classification.wsgi.application"
 #     }
 # }
 
-# DATABASE_URL = "postgresql://mysuperuser:DjangoDBPass23##@applikudjango.cpgg0mgau32j.us-east-1.rds.amazonaws.com:5432/applikudjango"
+# DATABASE_URL = "postgresql://mysuperuser:DjangoDBPass23##@applikudjango.cpgg0mgau32j.us-east-1.rds.amazonaws.com:5432/DjangoApplikuDB"
 
 # NEW CONTENT
 

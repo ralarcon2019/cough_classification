@@ -130,7 +130,7 @@ WSGI_APPLICATION = "cough_classification.wsgi.application"
 #     "default": env.db(default="sqlite://db.sqlite3")
 # }
 DATABASES = {
-    "default":env("DATABASE_URL")
+    "default":env.db("DATABASE_URL")
 }
 
 # db_from_env = os.environ.get("DATABASE_URL")

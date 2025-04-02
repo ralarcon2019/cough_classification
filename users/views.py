@@ -2,8 +2,10 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
 from django.contrib.auth import login, logout
-# from users.models import AudioRecording
+from users.models import AudioFile
 from django.http import JsonResponse
 
 
@@ -56,10 +58,46 @@ def logout_view(request):
 #     if request.method == "POST" and request.user.is_authenticated:
 #         audio_file = request.FILES.get('audio_file')
 #         if audio_file:
-#             recording = AudioRecording.objects.create(
+#             recording = AudioFile.objects.create(
 #                 user=request.user, file=audio_file)
 #             # Trigger ML task (via Celery or API call)
 #             # start_ml_processing.delay(recording.id)  # Example Celery task
 #             return JsonResponse({"message": "Audio uploaded successfully!", "file_url": recording.file.url})
 #         return JsonResponse({"error": "No file uploaded."}, status=400)
 #     return JsonResponse({"error": "Unauthorized or invalid request"}, status=403)
+
+@login_required
+def record_audio(request):
+    return render(request, "users/record_audio.html")
+
+
+@login_required
+def upload_audio(request):
+    if request.method == "POST" and request.FILES.get("audio"):
+        audio = AudioFile.objects.create(
+            user=request.user,
+            file=request.FILES["audio"]
+        )
+        return JsonResponse({
+            "message": "Audio uploaded successfully!",
+            "file_url": audio.file.url
+        })
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+
+@login_required
+def upload_audio(request):
+    if request.method == "POST" and request.FILES.get("audio_file"):
+        audio = AudioFile.objects.create(
+            user=request.user,
+            file=request.FILES["audio_file"]
+        )
+        return redirect("view_audio")  # Or wherever you want to redirect
+    return render(request, "upload_audio.html")
+
+@login_required
+def view_audio(request):
+    user_audio = AudioFile.objects.filter(user=request.user)
+    return render(request, "view_audio.html", {"audio_files": user_audio})

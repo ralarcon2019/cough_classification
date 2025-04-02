@@ -15,6 +15,8 @@ def project(request):
         'milestone3Pres': 'documents/Milestone Three Fall 2024 Senior Design.pdf',
         'milestone4Eval': 'documents/Milestone Four Progress Evaluation.pdf',
         'milestone4Pres': 'documents/Milestone Four Spring 2025 Senior Design.pdf',
+        'milestone5Eval': 'documents/Milestone Five Progress Evaluation.pdf',
+        'milestone5Pres': 'documents/Milestone Five Spring 2025 Senior Design.pdf',
         'projectPlan': 'documents/Project Plan.pdf',
         'projectPlan2': 'documents/Project Plan Spring.pdf',
         'webTesting': 'documents/Web Testing Plan.pdf',

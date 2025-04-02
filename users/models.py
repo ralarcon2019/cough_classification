@@ -30,8 +30,9 @@ class Users(AbstractUser):
     last_name = models.CharField(max_length=15)
     birthday = models.DateTimeField(null=True)
     gender = models.CharField(null=True,
-        max_length=6,
-        choices=[('MALE', 'MALE'), ('FEMALE', 'FEMALE')]
+        max_length=17,
+        choices=[('MALE', 'MALE'), ('FEMALE', 'FEMALE'), 
+                 ('NON-BINARY', 'NON-BINARY'), ('PREFER NOT TO SAY', 'PREFER NOT TO SAY')]
     )
 
     objects = CustomUserManager()
@@ -42,19 +43,16 @@ class Users(AbstractUser):
 
 
 
+    
+def user_audio_upload_path(instance, filename):
+    return f"user_{instance.user.id}/audio/{filename}"
 
 
+class AudioFile(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    file = models.FileField(upload_to=user_audio_upload_path)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
-# # from django.contrib.auth.models import User
-# def user_audio_upload_path(instance, filename):
-#     # Example: 'user_1/audio/recording_20231130.wav'
-#     return f'user_{instance.user.id}/audio/{filename}'
-
-# class AudioRecording(models.Model):
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL,
-#                              on_delete=models.CASCADE)
-#     file = models.FileField(upload_to=user_audio_upload_path)
-#     uploaded_at = models.DateTimeField(auto_now_add=True)
-
-#     def __str__(self):
-#         return f"Audio by {self.user.username} at {self.uploaded_at}"
+    def __str__(self):
+        return f"{self.user.username} - {self.file.name}"

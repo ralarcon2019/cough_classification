@@ -61,7 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "main",
     "users",
-    "MLContainer",
+    # "MLContainer",
 ]
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -129,9 +129,22 @@ WSGI_APPLICATION = "cough_classification.wsgi.application"
 # DATABASES = {
 #     "default": env.db(default="sqlite://db.sqlite3")
 # }
-DATABASES = {
-    "default":env.db("DATABASE_URL")
-}
+if DEBUG:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "djangodb",  # Match the database name
+            "USER": "mydjango",  # Match the PostgreSQL role (user)
+            "PASSWORD": "djangoDBpass",  # Use the password you set
+            "HOST": "localhost",  # Change if using a remote DB
+            "PORT": "5432",  # Default PostgreSQL port
+        }
+        # env.db(default="sqlite://db.sqlite3")
+    }
+else:
+    DATABASES = {
+        "default": env.db("DATABASE_URL")
+    }
 
 # db_from_env = os.environ.get("DATABASE_URL")
 # DATABASES["default"].update(db_from_env)
@@ -185,10 +198,10 @@ USE_TZ = True
 
 # THIS WORKS
 
-# if DEBUG:  # Only for local development
-#     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-#     MEDIA_URL = '/media/'
-#     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+if DEBUG:  # Only for local development
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # else:
 #     MEDIA_ROOT = 'media'
 #     MEDIA_URL = f'https://{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com/'
@@ -211,9 +224,9 @@ WHITENOISE_AUTOREFRESH = DEBUG
 
 
 
-# STATICFILES_DIRS = [
-#     BASE_DIR / 'static'
-# ]
+STATICFILES_DIRS = [
+    BASE_DIR / 'static'
+]
 
 
 

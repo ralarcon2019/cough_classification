@@ -90,7 +90,7 @@
                    <a class="nav-link {% if request.resolver_match.url_name == 'research' %}active{% endif %}" aria-current="page" href="{% url 'main:research' %}">Research</a>
                     
                     {% if user.is_authenticated %}
-                        <a class="nav-link {% if request.resolver_match.url_name == 'detection' %}active{% endif %}" aria-current="page" href="{% url 'MLContainer:detection' %}">Detection</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'detection' %}active{% endif %}" aria-current="page" href="{% url 'users:record_audio' %}">Detection</a>
                         {% comment %} <form action="{% url 'users:logout' %}" method="post">
                             {% csrf_token %}
                             <button>Logout</button>

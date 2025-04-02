@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Record Audio{% endblock title %}
+
+{% block head_block %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock head_block %}
+
+{% block body %}
+<h1>Record and Playback Audio</h1>
+
+<div id="recorder">
+    <button id="recordButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+</div>
+
+<div id="playback">
+    <h2>Playback</h2>
+    <audio id="audioPlayback" controls></audio>
+</div>
+
+<!-- Optional: Upload form if you want to store the recording -->
+<form id="audioUploadForm" method="POST" action="{% url 'users:record_audio' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="hidden" name="audio" id="audioFileInput">
+    <button type="submit">Save Recording</button>
+</form>
+
+<script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioStream;
+
+    const recordButton = document.getElementById("recordButton");
+    const stopButton = document.getElementById("stopButton");
+    const audioPlayback = document.getElementById("audioPlayback");
+    const audioFileInput = document.getElementById("audioFileInput");
+
+    recordButton.addEventListener("click", async () => {
+        try {
+            audioChunks = [];
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(audioStream);
+
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayback.src = audioUrl;
+
+                // Release the microphone
+                audioStream.getTracks().forEach(track => track.stop());
+
+                // Optionally prepare the audio data for upload
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    audioFileInput.value = reader.result;
+                };
+                reader.readAsDataURL(audioBlob);
+            };
+
+            mediaRecorder.start();
+            recordButton.disabled = true;
+            stopButton.disabled = false;
+        } catch (error) {
+            console.error("Error accessing the microphone:", error);
+        }
+    });
+
+    stopButton.addEventListener("click", () => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+        }
+        recordButton.disabled = false;
+        stopButton.disabled = true;
+    });
+</script>
+
+{% endblock body %}

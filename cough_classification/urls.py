@@ -32,7 +32,7 @@ urlpatterns = [
     path('', include('main.urls')),
     path("admin/", admin.site.urls),
     path('users/', include('users.urls')),
-    path('detection/', include('MLContainer.urls')),
+    # path('detection/', include('users.urls')),
     # path('', views.homepage),
 ]
 

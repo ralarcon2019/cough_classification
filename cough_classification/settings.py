@@ -107,28 +107,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "cough_classification.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": "djangodb",  # Match the database name
-#         "USER": "mydjango",  # Match the PostgreSQL role (user)
-#         "PASSWORD": "djangoDBpass",  # Use the password you set
-#         "HOST": "localhost",  # Change if using a remote DB
-#         "PORT": "5432",  # Default PostgreSQL port
-#     }
-# }
-
-# DATABASE_URL = "postgresql://mysuperuser:DjangoDBPass23##@applikudjango.cpgg0mgau32j.us-east-1.rds.amazonaws.com:5432/DjangoApplikuDB"
-
-# NEW CONTENT
-
-# DATABASES = {
-#     "default": env.db(default="sqlite://db.sqlite3")
-# }
 if DEBUG:
     DATABASES = {
         "default": {
@@ -143,13 +121,11 @@ if DEBUG:
     }
 else:
     DATABASES = {
-        "default": env.db("DATABASE_URL")
+        # "default": env.db("DATABASE_URL")
+        "default": dj_database_url.config(default=os.getenv("DATABASE_URL"))
+
     }
 
-# db_from_env = os.environ.get("DATABASE_URL")
-# DATABASES["default"].update(db_from_env)
-    
-# NEW CONTENT
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -202,18 +178,6 @@ if DEBUG:  # Only for local development
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-# else:
-#     MEDIA_ROOT = 'media'
-#     MEDIA_URL = f'https://{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com/'
-#     MEDIA_HOST = f'{MEDIA_S3_BUCKET_NAME}.s3.amazonaws.com'
-#     CUSTOM_MEDIA_DOMAIN = env('d16tatg3lec94w.cloudfront.net', default=None)
-
-#     if CUSTOM_MEDIA_DOMAIN:
-#         MEDIA_HOST = CUSTOM_MEDIA_DOMAIN
-
-#     MEDIA_URL = f'https://{MEDIA_HOST}/'
-
-    
 
 
 #NEW CONTENT
@@ -223,14 +187,9 @@ WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 
 
-
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
-
-
-
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

@@ -1,3 +1,6 @@
+from .models import AudioFile
+from django.core.files.base import ContentFile
+import base64
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
@@ -5,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 
 from django.contrib.auth import login, logout
-from users.models import AudioFile
+# from users.models import AudioFile
 from django.http import JsonResponse
 
 
@@ -71,33 +74,59 @@ def record_audio(request):
     return render(request, "users/record_audio.html")
 
 
+# @login_required
+# def upload_audio(request):
+#     if request.method == "POST" and request.FILES.get("audio"):
+#         audio = AudioFile.objects.create(
+#             user=request.user,
+#             file=request.FILES["audio"]
+#         )
+#         return JsonResponse({
+#             "message": "Audio uploaded successfully!",
+#             "file_url": audio.file.url
+#         })
+#     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
 @login_required
 def upload_audio(request):
-    if request.method == "POST" and request.FILES.get("audio"):
-        audio = AudioFile.objects.create(
-            user=request.user,
-            file=request.FILES["audio"]
-        )
-        return JsonResponse({
-            "message": "Audio uploaded successfully!",
-            "file_url": audio.file.url
-        })
+    if request.method == "POST":
+        # Option 1: Check if a file was uploaded (e.g. via FormData with Blob)
+        if request.FILES.get("audio"):
+            audio = AudioFile.objects.create(
+                user=request.user,
+                file=request.FILES["audio"]
+            )
+            return JsonResponse({
+                "message": "Audio uploaded successfully!",
+                "file_url": audio.file.url
+            })
+
+        # Option 2: Check for a base64-encoded audio string in POST data
+        audio_data = request.POST.get("audio")
+        if audio_data:
+            try:
+                # Expected format: "data:audio/wav;base64,AAAA..."
+                header, encoded = audio_data.split(',', 1)
+                # You can add additional checks on header if needed
+                audio_content = base64.b64decode(encoded)
+                # Create a ContentFile, giving it a filename
+                audio_file = ContentFile(audio_content, name="recording.wav")
+                audio = AudioFile.objects.create(
+                    user=request.user,
+                    file=audio_file
+                )
+                return JsonResponse({
+                    "message": "Audio uploaded successfully!",
+                    "file_url": audio.file.url
+                })
+            except Exception as e:
+                return JsonResponse({"error": "Failed to decode audio data: " + str(e)}, status=400)
+
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-
-
 @login_required
-def upload_audio(request):
-    if request.method == "POST" and request.FILES.get("audio_file"):
-        audio = AudioFile.objects.create(
-            user=request.user,
-            file=request.FILES["audio_file"]
-        )
-        return redirect("view_audio")  # Or wherever you want to redirect
-    return render(request, "upload_audio.html")
-
-@login_required
-def view_audio(request):
-    user_audio = AudioFile.objects.filter(user=request.user)
-    return render(request, "view_audio.html", {"audio_files": user_audio})
+def record_audio(request):
+    saved_audio = AudioFile.objects.filter(user=request.user)
+    return render(request, "users/record_audio.html", {"saved_audio": saved_audio})

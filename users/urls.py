@@ -10,8 +10,8 @@ urlpatterns = [
     path('login/', views.login_view, name="login"),
     path('logout/', views.logout_view, name="logout"),
     # path('upload-audio/', views.upload_audio, name='upload_audio'),
-    path("record-audio/", views.record_audio,
-         name="record_audio"),  # Must match EXACTLY
+    path("record-audio/", views.record_audio, name="record_audio"),
+    path("upload-audio/", views.upload_audio, name="upload_audio"),
 
 ]
 

@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
+from django import forms
+
 
 
 
@@ -28,7 +30,8 @@ class Users(AbstractUser):
     # email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=15)
     last_name = models.CharField(max_length=15)
-    birthday = models.DateTimeField(null=True)
+    # birthday = models.DateTimeField(null=True)
+    birthday = models.DateField(null=True, blank=True)
     gender = models.CharField(null=True,
         max_length=17,
         choices=[('MALE', 'MALE'), ('FEMALE', 'FEMALE'), 

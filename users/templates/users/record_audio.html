@@ -10,22 +10,46 @@
 {% block body %}
 <h1>Record and Playback Audio</h1>
 
+<!-- Recording Section -->
 <div id="recorder">
     <button id="recordButton">Start Recording</button>
     <button id="stopButton" disabled>Stop Recording</button>
 </div>
 
 <div id="playback">
-    <h2>Playback</h2>
+    <h2>Playback of Current Recording</h2>
     <audio id="audioPlayback" controls></audio>
 </div>
 
-<!-- Optional: Upload form if you want to store the recording -->
-<form id="audioUploadForm" method="POST" action="{% url 'users:record_audio' %}" enctype="multipart/form-data">
+<!-- Upload Form (Optional) -->
+<form id="audioUploadForm" method="POST" action="{% url 'users:upload_audio' %}" enctype="multipart/form-data">
     {% csrf_token %}
     <input type="hidden" name="audio" id="audioFileInput">
     <button type="submit">Save Recording</button>
 </form>
+
+<!-- Button to Toggle Display of Saved Recordings -->
+<button id="toggleSavedRecordings" class="btn btn-secondary">Show Saved Recordings</button>
+
+<!-- Section for Saved Recordings (hidden by default) -->
+<div id="savedRecordings" style="display: none; margin-top: 20px;">
+    <h2>Your Saved Recordings</h2>
+    {% if saved_audio %}
+        <ul>
+            {% for audio in saved_audio %}
+                <li style="margin-bottom: 15px;">
+                    <p>{{ audio.file.name }} (Uploaded on {{ audio.uploaded_at|date:"F j, Y, g:i a" }})</p>
+                    <audio controls>
+                        <source src="{{ audio.file.url }}" type="audio/wav">
+                        Your browser does not support the audio element.
+                    </audio>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No saved recordings found.</p>
+    {% endif %}
+</div>
 
 <script>
     let mediaRecorder;
@@ -37,6 +61,7 @@
     const audioPlayback = document.getElementById("audioPlayback");
     const audioFileInput = document.getElementById("audioFileInput");
 
+    // Recording functionality
     recordButton.addEventListener("click", async () => {
         try {
             audioChunks = [];
@@ -54,10 +79,10 @@
                 const audioUrl = URL.createObjectURL(audioBlob);
                 audioPlayback.src = audioUrl;
 
-                // Release the microphone
+                // Stop and release microphone
                 audioStream.getTracks().forEach(track => track.stop());
 
-                // Optionally prepare the audio data for upload
+                // Optionally, store blob data for upload
                 const reader = new FileReader();
                 reader.onloadend = function() {
                     audioFileInput.value = reader.result;
@@ -80,6 +105,17 @@
         recordButton.disabled = false;
         stopButton.disabled = true;
     });
-</script>
 
+    // Toggle Saved Recordings Section
+    document.getElementById("toggleSavedRecordings").addEventListener("click", function() {
+        var container = document.getElementById("savedRecordings");
+        if (container.style.display === "none") {
+            container.style.display = "block";
+            this.textContent = "Hide Saved Recordings";
+        } else {
+            container.style.display = "none";
+            this.textContent = "Show Saved Recordings";
+        }
+    });
+</script>
 {% endblock body %}

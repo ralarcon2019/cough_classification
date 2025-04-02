@@ -7,6 +7,11 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class CustomUserCreationForm(UserCreationForm):
+    birthday = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date'}),
+        label="Birthday",
+        required=False
+    )
     class Meta:
         model = User
         fields = ("username", "first_name",

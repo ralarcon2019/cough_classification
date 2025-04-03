@@ -134,23 +134,37 @@ logger = logging.getLogger(__name__)
 
 @login_required
 def upload_audio(request):
-    logger.debug("Using storage: %s", settings.DEFAULT_FILE_STORAGE)
-    logger.debug("request.FILES keys: %s", list(request.FILES.keys()))
-    logger.debug("request.POST keys: %s", list(request.POST.keys()))
-
     if request.method == "POST":
-        # 1) Try to get the file from request.FILES
-        if "audio" in request.FILES:
-            audio_file = request.FILES["audio"]
-            ...
-        # 2) Or try base64 from request.POST
-        elif "audio" in request.POST:
-            audio_data = request.POST.get("audio")
-            ...
+        # 'data:audio/wav;base64,AAAA...'
+        audio_data = request.POST.get("audio")
+        if audio_data:
+            try:
+                # Split the base64 string at the first comma
+                header, encoded = audio_data.split(',', 1)
+                # Decode the base64 string
+                audio_content = base64.b64decode(encoded)
+                # Create a ContentFile
+                audio_file = ContentFile(audio_content, name="recording.wav")
+
+                # Save to your model
+                audio = AudioFile.objects.create(
+                    user=request.user,
+                    file=audio_file
+                )
+
+                return JsonResponse({
+                    "message": "Audio uploaded successfully!",
+                    "file_url": audio.file.url
+                })
+            except Exception as e:
+                return JsonResponse(
+                    {"error": f"Failed to decode audio data: {str(e)}"}, status=400
+                )
         else:
-            logger.debug("No 'audio' in FILES or POST")
-            return JsonResponse({"error": "Invalid request"}, status=400)
+            return JsonResponse({"error": "No audio data found"}, status=400)
+
     return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 
 @login_required

@@ -132,7 +132,7 @@ def record_audio(request):
 logger = logging.getLogger(__name__)
 
 
-logger = logging.getLogger(__name__)
+
 
 
 @login_required
@@ -140,7 +140,9 @@ def upload_audio(request):
     if request.method == "POST":
         audio_data = request.POST.get("audio")
         if audio_data:
+
             # Log the first 100 characters (for debugging)
+            logger.debug("DEBUG is set to: %s", settings.DEBUG)
             logger.debug("audio_data: %s", audio_data[:100])
             try:
                 header, encoded = audio_data.split(',', 1)

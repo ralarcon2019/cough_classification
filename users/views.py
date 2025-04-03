@@ -115,7 +115,7 @@ def upload_audio(request):
                 audio_content = base64.b64decode(encoded)
                 # Create a ContentFile, giving it a filename
                 audio_file = ContentFile(audio_content, name="recording.wav")
-                logger.debug("Using storage: %s", DEFAULT_FILE_STORAGE)
+                logger.debug("Using storage: %s", settings.DEFAULT_FILE_STORAGE)
 
                 audio = AudioFile.objects.create(
                     user=request.user,

@@ -136,6 +136,9 @@ logger = logging.getLogger(__name__)
 def upload_audio(request):
     if request.method == "POST":
         # 'data:audio/wav;base64,AAAA...'
+        logger.debug("POST data: %s", request.POST)
+        logger.debug("audio_data: %s", audio_data[:100])  # log first 100 chars
+
         audio_data = request.POST.get("audio")
         if audio_data:
             try:

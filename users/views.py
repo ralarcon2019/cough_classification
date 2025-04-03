@@ -142,8 +142,8 @@ def upload_audio(request):
         if audio_data:
 
             # Log the first 100 characters (for debugging)
-            logger.debug("DEBUG is set to: %s", settings.DEBUG)
-            logger.debug("audio_data: %s", audio_data[:100])
+            # logger.debug("DEBUG is set to: %s", settings.DEBUG)
+            # logger.debug("audio_data: %s", audio_data[:100])
             try:
                 header, encoded = audio_data.split(',', 1)
                 audio_content = base64.b64decode(encoded)

@@ -182,16 +182,16 @@ if DEBUG:  # Only for local development
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 if not DEBUG:
-    # MEDIA_URL = env.str("MEDIA_URL", default="/media/")
-    # MEDIA_ROOT = env.str("MEDIA_ROOT", default="/app/media")
-    
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', default='us-east-2')
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = env.str("MEDIA_ROOT", default="/app/media")
+    # DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+    # AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')
+    # AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
+    # AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', default='us-east-2')
+    # AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    # MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 
 #NEW CONTENT

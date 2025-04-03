@@ -85,7 +85,7 @@
                 // Optionally, store blob data for upload
                 const reader = new FileReader();
                 reader.onloadend = function() {
-                    audioFileInput.value = reader.result;
+                    document.getElementById("audioFileInput").value = reader.result;
                 };
                 reader.readAsDataURL(audioBlob);
             };

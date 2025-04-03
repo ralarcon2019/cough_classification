@@ -1,3 +1,4 @@
+import logging
 from .models import AudioFile
 from django.core.files.base import ContentFile
 import base64
@@ -20,6 +21,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from .forms import CustomUserCreationForm
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -112,6 +115,8 @@ def upload_audio(request):
                 audio_content = base64.b64decode(encoded)
                 # Create a ContentFile, giving it a filename
                 audio_file = ContentFile(audio_content, name="recording.wav")
+                logger.debug("Using storage: %s", DEFAULT_FILE_STORAGE)
+
                 audio = AudioFile.objects.create(
                     user=request.user,
                     file=audio_file

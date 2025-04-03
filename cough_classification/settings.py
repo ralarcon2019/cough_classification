@@ -19,6 +19,7 @@ import environ
 import os
 import dj_database_url
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "main",
     "users",
+    "storages"
     # "MLContainer",
 ]
 
@@ -180,6 +182,9 @@ if DEBUG:  # Only for local development
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 if not DEBUG:
+    # MEDIA_URL = env.str("MEDIA_URL", default="/media/")
+    # MEDIA_ROOT = env.str("MEDIA_ROOT", default="/app/media")
+    
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
     AWS_SECRET_ACCESS_KEY = env('AWS_SECRET_ACCESS_KEY')

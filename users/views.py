@@ -152,10 +152,7 @@ def upload_audio(request):
                     user=request.user,
                     file=audio_file
                 )
-                return JsonResponse({
-                    "message": "Audio uploaded successfully!",
-                    "file_url": audio.file.url
-                })
+                return redirect("users:record_audio")
             except Exception as e:
                 return JsonResponse({"error": "Failed to decode audio data: " + str(e)}, status=400)
         else:

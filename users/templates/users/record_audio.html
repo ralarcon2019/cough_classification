@@ -1,121 +1,275 @@
 {% extends "layout.html" %}
 {% load static %}
 
-{% block title %}Record Audio{% endblock title %}
+{% block title %}Detection Dashboard{% endblock title %}
 
 {% block head_block %}
-    <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="csrf-token" content="{{ csrf_token }}">
 {% endblock head_block %}
 
 {% block body %}
-<h1>Record and Playback Audio</h1>
+<div class="container my-4">
+  <!-- Top row: Name | Record Button | Recommendation -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="border rounded bg-light text-center py-4">
+        <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="border rounded bg-light text-center py-4">
+        <button id="recordToggle" class="btn btn-primary">
+          Make Recording
+        </button>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3 h-100">
+        <strong>Recommendation:</strong> {{ recommendation_text }}<br>
+        <small>(Not official medical advice)</small>
+      </div>
+    </div>
+  </div>
 
-<!-- Recording Section -->
-<div id="recorder">
-    <button id="recordButton">Start Recording</button>
-    <button id="stopButton" disabled>Stop Recording</button>
+  <!-- Middle row: CNN+symptoms graph | Saved recordings & symptoms -->
+  <div class="row mb-4">
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3" style="height:350px;">
+        <h6>Combined CNN & Symptoms</h6>
+        <canvas id="cnnSymptomsChart" class="w-100 h-100"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3" style="height:350px;">
+        <h6>Saved Recordings & Symptoms</h6>
+        <div id="savedRecordings" style="max-height:300px; overflow-y:auto;">
+          {% if saved_audio %}
+            <ul class="list-group list-group-flush">
+              {% for audio in saved_audio %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  {{ audio.uploaded_at|date:"M d, Y H:i" }}
+                  <audio controls src="{{ audio.file.url }}"></audio>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="mb-0">No recordings yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row: timeline graph | symptom-likelihood graph -->
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <div class="border rounded bg-light p-3" style="height:250px;">
+        <h6>Recording Timeline</h6>
+        <canvas id="recordingTimelineChart" class="w-100 h-100"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="border rounded bg-light p-3" style="height:250px;">
+        <h6>Symptom-based COVID Likelihood</h6>
+        <canvas id="symptomLikelihoodChart" class="w-100 h-100"></canvas>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div id="playback">
-    <h2>Playback of Current Recording</h2>
-    <audio id="audioPlayback" controls></audio>
-</div>
-
-<!-- Upload Form (Optional) -->
-<form id="audioUploadForm" method="POST" action="{% url 'users:upload_audio' %}" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="hidden" name="audio" id="audioFileInput">
-    <button type="submit">Save Recording</button>
+<!-- Hidden upload form -->
+<form
+  id="audioUploadForm"
+  method="POST"
+  action="{% url 'users:upload_audio' %}"
+  enctype="multipart/form-data"
+  style="display:none;"
+>
+  {% csrf_token %}
+  <input type="hidden" name="audio" id="audioFileInput">
 </form>
 
-<!-- Button to Toggle Display of Saved Recordings -->
-<button id="toggleSavedRecordings" class="btn btn-secondary">Show Saved Recordings</button>
+<script>
+let mediaRecorder, audioChunks = [], audioStream;
+const btn    = document.getElementById("recordToggle");
+const form   = document.getElementById("audioUploadForm");
+const input  = document.getElementById("audioFileInput");
 
-<!-- Section for Saved Recordings (hidden by default) -->
-<div id="savedRecordings" style="display: none; margin-top: 20px;">
+// Start → Stop → Save workflow
+btn.addEventListener("click", async () => {
+  if (!mediaRecorder) {
+    // start
+    audioChunks = [];
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(audioStream);
+    mediaRecorder.ondataavailable = e => e.data.size && audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(audioChunks, { type: "audio/wav" });
+      audioStream.getTracks().forEach(t => t.stop());
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        input.value = reader.result;
+        btn.textContent = "Save Recording";
+        btn.disabled = false;
+      };
+      reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start();
+    btn.textContent = "Stop Recording";
+    return;
+  }
+
+  if (mediaRecorder.state === "recording") {
+    // stop
+    btn.disabled = true;
+    mediaRecorder.stop();
+    return;
+  }
+
+  if (btn.textContent === "Save Recording") {
+    // save
+    btn.disabled = true;
+    form.submit();
+    mediaRecorder = null;
+    btn.textContent = "Make Recording";
+  }
+});
+</script>
+{% endblock body %}
+
+
+{% comment %} 
+
+
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Record Audio{% endblock title %}
+
+{% block head_block %}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock head_block %}
+
+{% block body %}
+<div class="container my-4">
+  <h1>Record and Playback Audio</h1>
+
+  <!-- Controls: Record/Stop/Save -->
+  <div id="recorder" class="mb-3">
+    <button id="recordToggle" class="btn btn-primary">
+      Start Recording
+    </button>
+  </div>
+
+  <!-- Playback -->
+  <div id="playback" class="mb-3">
+    <h2>Playback of Current Recording</h2>
+    <audio id="audioPlayback" controls></audio>
+  </div>
+
+  <!-- Hidden Upload Form -->
+  <form
+    id="audioUploadForm"
+    method="POST"
+    action="{% url 'users:upload_audio' %}"
+    enctype="multipart/form-data"
+    style="display: none;"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="audio" id="audioFileInput">
+  </form>
+
+  <!-- Toggle Saved Recordings -->
+  <button id="toggleSavedRecordings" class="btn btn-secondary mb-3">
+    Show Saved Recordings
+  </button>
+
+  <!-- Saved Recordings List -->
+  <div id="savedRecordings" style="display: none; margin-top: 20px;">
     <h2>Your Saved Recordings</h2>
     {% if saved_audio %}
-        <ul>
-            {% for audio in saved_audio %}
-                <li style="margin-bottom: 15px;">
-                    <p>{{ audio.file.name }} (Uploaded on {{ audio.uploaded_at|date:"F j, Y, g:i a" }})</p>
-                    <audio controls>
-                        <source src="{{ audio.file.url }}" type="audio/wav">
-                        Your browser does not support the audio element.
-                    </audio>
-                </li>
-            {% endfor %}
-        </ul>
+      <ul class="list-group">
+        {% for audio in saved_audio %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ audio.file.name }} ({{ audio.uploaded_at|date:"F j, Y, g:i a" }})
+            <audio controls src="{{ audio.file.url }}"></audio>
+          </li>
+        {% endfor %}
+      </ul>
     {% else %}
-        <p>No saved recordings found.</p>
+      <p>No saved recordings found.</p>
     {% endif %}
+  </div>
 </div>
 
 <script>
-    let mediaRecorder;
-    let audioChunks = [];
-    let audioStream;
+let mediaRecorder, audioChunks = [], audioStream;
+const btn = document.getElementById("recordToggle");
+const audioPlayback = document.getElementById("audioPlayback");
+const uploadForm = document.getElementById("audioUploadForm");
+const audioInput = document.getElementById("audioFileInput");
 
-    const recordButton = document.getElementById("recordButton");
-    const stopButton = document.getElementById("stopButton");
-    const audioPlayback = document.getElementById("audioPlayback");
-    const audioFileInput = document.getElementById("audioFileInput");
+// Single button workflow: Start → Stop → Save
+btn.addEventListener("click", async () => {
+  // 1) Start recording
+  if (!mediaRecorder) {
+    audioChunks = [];
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(audioStream);
 
-    // Recording functionality
-    recordButton.addEventListener("click", async () => {
-        try {
-            audioChunks = [];
-            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(audioStream);
+    mediaRecorder.ondataavailable = e => {
+      if (e.data.size) audioChunks.push(e.data);
+    };
 
-            mediaRecorder.ondataavailable = event => {
-                if (event.data.size > 0) {
-                    audioChunks.push(event.data);
-                }
-            };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(audioChunks, { type: "audio/wav" });
+      const url  = URL.createObjectURL(blob);
+      audioPlayback.src = url;
+      audioStream.getTracks().forEach(track => track.stop());
 
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-                const audioUrl = URL.createObjectURL(audioBlob);
-                audioPlayback.src = audioUrl;
+      // prepare for upload
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        audioInput.value = reader.result;
+        btn.textContent = "Save Recording";
+        btn.disabled = false;
+      };
+      reader.readAsDataURL(blob);
+    };
 
-                // Stop and release microphone
-                audioStream.getTracks().forEach(track => track.stop());
+    mediaRecorder.start();
+    btn.textContent = "Stop Recording";
+    return;
+  }
 
-                // Optionally, store blob data for upload
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    document.getElementById("audioFileInput").value = reader.result;
-                };
-                reader.readAsDataURL(audioBlob);
-            };
+  // 2) Stop recording
+  if (mediaRecorder.state === "recording") {
+    btn.disabled = true;
+    mediaRecorder.stop();
+    return;
+  }
 
-            mediaRecorder.start();
-            recordButton.disabled = true;
-            stopButton.disabled = false;
-        } catch (error) {
-            console.error("Error accessing the microphone:", error);
-        }
-    });
+  // 3) Save recording
+  if (btn.textContent === "Save Recording") {
+    btn.disabled = true;
+    uploadForm.submit();
+    // reset for next session
+    mediaRecorder = null;
+    btn.textContent = "Start Recording";
+  }
+});
 
-    stopButton.addEventListener("click", () => {
-        if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-        }
-        recordButton.disabled = false;
-        stopButton.disabled = true;
-    });
-
-    // Toggle Saved Recordings Section
-    document.getElementById("toggleSavedRecordings").addEventListener("click", function() {
-        var container = document.getElementById("savedRecordings");
-        if (container.style.display === "none") {
-            container.style.display = "block";
-            this.textContent = "Hide Saved Recordings";
-        } else {
-            container.style.display = "none";
-            this.textContent = "Show Saved Recordings";
-        }
-    });
-</script>
-{% endblock body %}
+// Toggle Saved Recordings visibility
+document.getElementById("toggleSavedRecordings")
+  .addEventListener("click", function() {
+    const saved = document.getElementById("savedRecordings");
+    if (saved.style.display === "none") {
+      saved.style.display = "block";
+      this.textContent = "Hide Saved Recordings";
+    } else {
+      saved.style.display = "none";
+      this.textContent = "Show Saved Recordings";
+    }
+  });
+</script> {% endblock body %}
+ {% endcomment %}

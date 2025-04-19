@@ -59,3 +59,26 @@ class AudioFile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.file.name}"
+
+
+class AnalysisResult(models.Model):
+    LABEL_CHOICES = [
+        ('healthy',     'Healthy'),
+        # ('symptomatic', 'Symptomatic'),
+        ('covid',       'COVID'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE,
+                             related_name='analysis_results')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    healthy_prob = models.FloatField()
+    covid_prob = models.FloatField()
+    label = models.CharField(max_length=12,
+                             choices=LABEL_CHOICES)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.user.username} @ {self.timestamp:%Y-%m-%d %H:%M} → {self.label}"

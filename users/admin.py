@@ -4,6 +4,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth import get_user_model
+from .models import AnalysisResult
 
 # from .forms import CustomUserCreationForm, CustomUserChangeForm
 # from .models import Users
@@ -38,5 +39,10 @@ class CustomUserAdmin(UserAdmin):
     search_fields = ("username", "email")
     ordering = ("username",)  # Default srting order
 
+
+@admin.register(AnalysisResult)
+class AnalysisResultAdmin(admin.ModelAdmin):
+    list_display = ('user', 'timestamp', 'label', 'covid_prob', 'healthy_prob')
+    list_filter = ('label', 'timestamp')
 
 admin.site.register(User, CustomUserAdmin)  # Register the custom admin panel

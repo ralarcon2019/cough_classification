@@ -5,6 +5,215 @@
 
 {% block head_block %}
   <meta name="csrf-token" content="{{ csrf_token }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Cal-Heatmap CSS & JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cal-heatmap@3.7.6/cal-heatmap.css" />
+  <script src="https://cdn.jsdelivr.net/npm/cal-heatmap@3.7.6/cal-heatmap.min.js"></script>
+{% endblock head_block %}
+
+{% block body %}
+<div class="container my-4">
+  <!-- Top row: Name | Record Button | Recommendation -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="border rounded bg-light text-center py-4">
+        <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="border rounded bg-light text-center py-4">
+        <button id="recordToggle" class="btn btn-primary">
+          Make Recording
+        </button>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3 h-100">
+        <strong>Recommendation:</strong> {{ recommendation_text }}<br>
+        <small>(Not official medical advice)</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Middle row: Weekly Trend | Saved Recordings -->
+  <div class="row mb-4">
+    <!-- Weekly COVID Trend -->
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3" style="height:350px;">
+        <h6>Weekly COVID Trend</h6>
+        <canvas id="weeklyTrendChart" class="w-100 h-100"></canvas>
+      </div>
+    </div>
+    <!-- Saved Recordings -->
+    <div class="col-md-6">
+      <div class="border rounded bg-light p-3" style="height:350px;">
+        <h6>Saved Recordings</h6>
+        <div id="savedRecordings" style="max-height:300px; overflow-y:auto;">
+          {% if saved_audio %}
+            <ul class="list-group list-group-flush">
+              {% for audio in saved_audio %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                  {{ audio.uploaded_at|date:"M d, Y H:i" }}
+                  <audio controls src="{{ audio.file.url }}"></audio>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="mb-0">No recordings yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom row: Recording Activity | Symptom Questionnaire -->
+  <div class="row">
+    <!-- Recording Activity GitHub‑style Calendar -->
+    <div class="col-md-6 mb-4">
+      <div class="border rounded bg-light p-3">
+        <h6>Recording Activity</h6>
+        <canvas id="historyTimelineChart" class="w-100" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Symptom Questionnaire Form -->
+    <div class="col-md-6 mb-4">
+      <div class="border rounded bg-light p-3" style="height:250px; overflow-y:auto;">
+        <h6>Symptom Questionnaire</h6>
+        {% comment %} <form method="POST" action="{% url 'users:submit_symptoms' %}"> {% endcomment %}
+        <form method="POST">    
+          {% csrf_token %}
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="cough" id="sym_cough">
+            <label class="form-check-label" for="sym_cough">Cough</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="fever" id="sym_fever">
+            <label class="form-check-label" for="sym_fever">Fever</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="fatigue" id="sym_fatigue">
+            <label class="form-check-label" for="sym_fatigue">Fatigue</label>
+          </div>
+          <div class="form-group mt-2">
+            <label for="sym_notes">Other notes</label>
+            <textarea class="form-control" name="notes" id="sym_notes" rows="2"
+                      placeholder="Any other symptoms..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-success btn-sm mt-2">Submit</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden upload form -->
+<form
+  id="audioUploadForm"
+  method="POST"
+  action="{% url 'users:upload_audio' %}"
+  enctype="multipart/form-data"
+  style="display:none;"
+>
+  {% csrf_token %}
+  <input type="hidden" name="audio" id="audioFileInput">
+</form>
+
+<script>
+// --- Recording control (unchanged) ---
+let mediaRecorder, audioChunks = [], audioStream;
+const btn   = document.getElementById("recordToggle");
+const form  = document.getElementById("audioUploadForm");
+const input = document.getElementById("audioFileInput");
+
+btn.addEventListener("click", async () => {
+  if (!mediaRecorder) {
+    audioChunks = [];
+    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(audioStream);
+    mediaRecorder.ondataavailable = e => e.data.size && audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      audioStream.getTracks().forEach(t => t.stop());
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        input.value = reader.result;
+        btn.textContent = "Save Recording";
+        btn.disabled = false;
+      };
+      reader.readAsDataURL(new Blob(audioChunks, { type: "audio/wav" }));
+    };
+    mediaRecorder.start();
+    btn.textContent = "Stop Recording";
+    return;
+  }
+  if (mediaRecorder.state === "recording") {
+    btn.disabled = true;
+    mediaRecorder.stop();
+    return;
+  }
+  if (btn.textContent === "Save Recording") {
+    btn.disabled = true;
+    form.submit();
+    mediaRecorder = null;
+    btn.textContent = "Make Recording";
+  }
+});
+
+// --- Chart.js placeholders ---
+new Chart(
+  document.getElementById('weeklyTrendChart').getContext('2d'),
+  {
+    type: 'line',
+    data: { labels: [], datasets: [{ label: 'COVID Likelihood', data: [], fill:true, tension:0.4 }] },
+    options: { scales:{ y:{ beginAtZero:true, max:100 } } }
+  }
+);
+
+new Chart(
+  document.getElementById('historyTimelineChart').getContext('2d'),
+  {
+    type: 'bar',
+    data: { labels: [], datasets: [{ label: 'Recordings', data: [] }] },
+    options: { scales:{ y:{ beginAtZero:true, precision:0 } } }
+  }
+);
+
+const cal = new CalHeatmap();
+cal.init({
+  itemSelector: "#activityCalendar",
+  domain: "month",
+  subDomain: "day",
+  cellSize: 15,
+  cellPadding: 5,
+  domainGutter: 10,
+  range: 3,               // show 3 months at a time (adjust as needed)
+  tooltip: true,
+  legend: [1, 2, 3, 4],   // thresholds for color buckets
+  data: {
+    // placeholder: map UNIX timestamp → count of recordings
+    // e.g.  new Date("2025-04-01").getTime()/1000: 2
+  },
+  start: new Date(),      // end at today
+  // you can configure next/previous buttons, etc.
+});
+</script>
+{% endblock body %}
+
+
+
+
+
+
+
+
+{% comment %} {% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Detection Dashboard{% endblock title %}
+
+{% block head_block %}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 {% endblock head_block %}
 
 {% block body %}
@@ -35,13 +244,13 @@
   <div class="row mb-4">
     <div class="col-md-6">
       <div class="border rounded bg-light p-3" style="height:350px;">
-        <h6>Combined CNN & Symptoms</h6>
+        <h6>Weekly Overview</h6>
         <canvas id="cnnSymptomsChart" class="w-100 h-100"></canvas>
       </div>
     </div>
     <div class="col-md-6">
       <div class="border rounded bg-light p-3" style="height:350px;">
-        <h6>Saved Recordings & Symptoms</h6>
+        <h6>Saved Recordings</h6>
         <div id="savedRecordings" style="max-height:300px; overflow-y:auto;">
           {% if saved_audio %}
             <ul class="list-group list-group-flush">
@@ -64,13 +273,13 @@
   <div class="row">
     <div class="col-md-6 mb-4">
       <div class="border rounded bg-light p-3" style="height:250px;">
-        <h6>Recording Timeline</h6>
+        <h6>Recording Activity</h6>
         <canvas id="recordingTimelineChart" class="w-100 h-100"></canvas>
       </div>
     </div>
     <div class="col-md-6 mb-4">
       <div class="border rounded bg-light p-3" style="height:250px;">
-        <h6>Symptom-based COVID Likelihood</h6>
+        <h6>Questionnaire</h6>
         <canvas id="symptomLikelihoodChart" class="w-100 h-100"></canvas>
       </div>
     </div>
@@ -135,141 +344,4 @@ btn.addEventListener("click", async () => {
   }
 });
 </script>
-{% endblock body %}
-
-
-{% comment %} 
-
-
-{% extends "layout.html" %}
-{% load static %}
-
-{% block title %}Record Audio{% endblock title %}
-
-{% block head_block %}
-  <meta name="csrf-token" content="{{ csrf_token }}">
-{% endblock head_block %}
-
-{% block body %}
-<div class="container my-4">
-  <h1>Record and Playback Audio</h1>
-
-  <!-- Controls: Record/Stop/Save -->
-  <div id="recorder" class="mb-3">
-    <button id="recordToggle" class="btn btn-primary">
-      Start Recording
-    </button>
-  </div>
-
-  <!-- Playback -->
-  <div id="playback" class="mb-3">
-    <h2>Playback of Current Recording</h2>
-    <audio id="audioPlayback" controls></audio>
-  </div>
-
-  <!-- Hidden Upload Form -->
-  <form
-    id="audioUploadForm"
-    method="POST"
-    action="{% url 'users:upload_audio' %}"
-    enctype="multipart/form-data"
-    style="display: none;"
-  >
-    {% csrf_token %}
-    <input type="hidden" name="audio" id="audioFileInput">
-  </form>
-
-  <!-- Toggle Saved Recordings -->
-  <button id="toggleSavedRecordings" class="btn btn-secondary mb-3">
-    Show Saved Recordings
-  </button>
-
-  <!-- Saved Recordings List -->
-  <div id="savedRecordings" style="display: none; margin-top: 20px;">
-    <h2>Your Saved Recordings</h2>
-    {% if saved_audio %}
-      <ul class="list-group">
-        {% for audio in saved_audio %}
-          <li class="list-group-item d-flex justify-content-between align-items-center">
-            {{ audio.file.name }} ({{ audio.uploaded_at|date:"F j, Y, g:i a" }})
-            <audio controls src="{{ audio.file.url }}"></audio>
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No saved recordings found.</p>
-    {% endif %}
-  </div>
-</div>
-
-<script>
-let mediaRecorder, audioChunks = [], audioStream;
-const btn = document.getElementById("recordToggle");
-const audioPlayback = document.getElementById("audioPlayback");
-const uploadForm = document.getElementById("audioUploadForm");
-const audioInput = document.getElementById("audioFileInput");
-
-// Single button workflow: Start → Stop → Save
-btn.addEventListener("click", async () => {
-  // 1) Start recording
-  if (!mediaRecorder) {
-    audioChunks = [];
-    audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(audioStream);
-
-    mediaRecorder.ondataavailable = e => {
-      if (e.data.size) audioChunks.push(e.data);
-    };
-
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(audioChunks, { type: "audio/wav" });
-      const url  = URL.createObjectURL(blob);
-      audioPlayback.src = url;
-      audioStream.getTracks().forEach(track => track.stop());
-
-      // prepare for upload
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        audioInput.value = reader.result;
-        btn.textContent = "Save Recording";
-        btn.disabled = false;
-      };
-      reader.readAsDataURL(blob);
-    };
-
-    mediaRecorder.start();
-    btn.textContent = "Stop Recording";
-    return;
-  }
-
-  // 2) Stop recording
-  if (mediaRecorder.state === "recording") {
-    btn.disabled = true;
-    mediaRecorder.stop();
-    return;
-  }
-
-  // 3) Save recording
-  if (btn.textContent === "Save Recording") {
-    btn.disabled = true;
-    uploadForm.submit();
-    // reset for next session
-    mediaRecorder = null;
-    btn.textContent = "Start Recording";
-  }
-});
-
-// Toggle Saved Recordings visibility
-document.getElementById("toggleSavedRecordings")
-  .addEventListener("click", function() {
-    const saved = document.getElementById("savedRecordings");
-    if (saved.style.display === "none") {
-      saved.style.display = "block";
-      this.textContent = "Hide Saved Recordings";
-    } else {
-      saved.style.display = "none";
-      this.textContent = "Show Saved Recordings";
-    }
-  });
-</script> {% endblock body %}
- {% endcomment %}
+{% endblock body %} {% endcomment %}

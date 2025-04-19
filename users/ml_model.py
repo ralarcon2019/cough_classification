@@ -1,6 +1,7 @@
 # users/ml_model.py
 import os
 
+from pydub import AudioSegment
 
 import librosa
 import logging
@@ -12,6 +13,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import wave
+import traceback
 
 
 # Attention modules remain unchanged
@@ -142,17 +145,62 @@ model.load_state_dict(model_dict)
 
 model.eval()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-def predict_cough(wav_path: str) -> dict:
+
+# def load_wav(path, sr_target=16000):
+#     with wave.open(path, 'rb') as wf:
+#         sr = wf.getframerate()
+#         frames = wf.readframes(wf.getnframes())
+#         # assume 16‑bit PCM:
+#         audio = np.frombuffer(frames, dtype=np.int16).astype(
+#             np.float32) / 32768.0
+#     # if you need to resample to sr_target, do it here (e.g. with scipy or sox)
+#     return audio, sr
+def load_wav(path, sr_target=16000):
     """
-    1) Load a WAV file
-    2) Preprocess to log‑mel spectrogram
-    3) Run through the CNN
-    4) Return { 'healthy': prob, 'covid': prob }
+    Load any audio file (wav, webm, ogg, mp3) and return
+    a mono numpy float32 array at sr_target.
     """
-    # load audio (16 kHz mono)
-    y, sr = librosa.load(wav_path, sr=16000, mono=True)
+    try:
+        # pydub will invoke ffmpeg under the hood
+        seg = AudioSegment.from_file(path)
+        seg = seg.set_frame_rate(sr_target).set_channels(1)
+
+        samples = np.array(seg.get_array_of_samples())
+        # pydub's samples are integers (16‑bit usually)
+        # normalize to float32 in [-1.0, +1.0]
+        samples = samples.astype(np.float32) / \
+            (2 ** (8 * seg.sample_width - 1))
+        return samples, sr_target
+
+    except Exception as e:
+        print(f"❗ load_audio FAILED for {path}: {e}")
+        # traceback.print_exc()
+        raise
+
+
+def predict_cough(wav_path):
+    print(f"Running inference on: {wav_path}")
+    # always use our universal loader
+    try:
+        y, sr = load_wav(wav_path, sr_target=16000)
+    except Exception:
+        # as a final fallback, try librosa
+
+        y, sr = librosa.load(wav_path, sr=16000, mono=True)
+# def predict_cough(wav_path: str) -> dict:
+#     """
+#     1) Load a WAV file
+#     2) Preprocess to log‑mel spectrogram
+#     3) Run through the CNN
+#     4) Return { 'healthy': prob, 'covid': prob }
+#     """
+#     # load audio (16 kHz mono)
+#     try:
+#         y, sr = load_wav(wav_path, sr_target=16000)
+#     except Exception as e:
+#         # fall back to librosa if you really need it
+#         import librosa
+#         y, sr = librosa.load(wav_path, sr=16000, mono=True)
     # pad/trim to exactly 3 s
     target = sr * 3
     if len(y) < target:

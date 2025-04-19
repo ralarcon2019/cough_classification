@@ -133,66 +133,76 @@
 </div>
 
 <script>
-  const btn       = document.getElementById("recordToggle");
-  const progress  = document.getElementById("recordProgress");
-  const audioEl   = document.getElementById("audioPlayback");
-  const input     = document.getElementById("audioFileInput");
-  const MAX_DUR   = 4000; // milliseconds
+  document.addEventListener("DOMContentLoaded", () => {
+  // Grab your elements
+  const btn   = document.getElementById("recordToggle");
+  const form  = document.getElementById("audioUploadForm");
+  const input = document.getElementById("audioFileInput");
 
-  let mediaRecorder, audioStream, progressInterval;
+  let mediaRecorder;
+  let audioChunks = [];
+  let audioStream;
 
-  btn.textContent = "Record";
+  console.log("recordToggle button:", btn);
 
   btn.addEventListener("click", async () => {
-    // 1) Not recording yet → start
+    console.log("Button clicked, mediaRecorder:", mediaRecorder);
+
+    // 1) If we've never started yet, start recording
     if (!mediaRecorder) {
-      btn.textContent = "Stop";
-      progress.style.width = "0%";
-      audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(audioStream);
-      audioChunks = [];
+      try {
+        audioChunks = [];
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
 
-      mediaRecorder.ondataavailable = e => {
-        if (e.data.size) audioChunks.push(e.data);
-      };
-
-      mediaRecorder.onstart = () => {
-        const startTime = Date.now();
-        progressInterval = setInterval(() => {
-          const elapsed = Date.now() - startTime;
-          const pct = Math.min(100, (elapsed / MAX_DUR) * 100);
-          progress.style.width = pct + "%";
-          if (elapsed >= MAX_DUR) mediaRecorder.stop();
-        }, 50);
-      };
-
-      mediaRecorder.onstop = () => {
-        clearInterval(progressInterval);
-        progress.style.width = "0%";
-        audioStream.getTracks().forEach(t => t.stop());
-
-        const blob = new Blob(audioChunks, { type: "audio/wav" });
-        audioEl.src = URL.createObjectURL(blob);
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          input.value = reader.result;
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) audioChunks.push(e.data);
         };
-        reader.readAsDataURL(blob);
 
-        mediaRecorder = null;
-        btn.textContent = "Record";
-      };
+        mediaRecorder.onstop = () => {
+          console.log("Recording stopped, chunks:", audioChunks);
+          const blob = new Blob(audioChunks, { type: "audio/wav" });
+          audioStream.getTracks().forEach(t => t.stop());
 
-      mediaRecorder.start();
+          // Convert to Base64 and stick in hidden input
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            input.value = reader.result;
+            btn.textContent = "Save Recording";
+            btn.disabled = false;
+            console.log("Ready to save, hidden input set");
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        mediaRecorder.start();
+        btn.textContent = "Stop Recording";
+        console.log("Recording started");
+      } catch (err) {
+        console.error("Could not start recording:", err);
+      }
       return;
     }
 
-    // 2) If currently recording → stop early
+    // 2) If we're currently recording, stop
     if (mediaRecorder.state === "recording") {
+      btn.disabled = true;
       mediaRecorder.stop();
+      console.log("Stopping mediaRecorder...");
+      return;
+    }
+
+    // 3) If the button now says "Save Recording", submit the form
+    if (btn.textContent === "Save Recording") {
+      console.log("Submitting form with audio data");
+      btn.disabled = true;
+      form.submit();
+      // reset for next time
+      mediaRecorder = null;
+      btn.textContent = "Make Recording";
     }
   });
+});
 </script>
 
 {% endblock body %}

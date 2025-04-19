@@ -41,6 +41,7 @@ platformdirs==4.3.7
 pooch==1.8.2
 psycopg2-binary==2.9.10
 pycparser==2.22
+pydub==0.25.1
 python-dateutil==2.9.0.post0
 requests==2.32.3
 s3transfer==0.6.2

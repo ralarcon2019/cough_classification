@@ -2,7 +2,9 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+import logging
+os.environ["NUMBA_DISABLE_JIT"] = "1"
+logging.getLogger("numba").setLevel(logging.WARNING)
 
 def main():
     """Run administrative tasks."""

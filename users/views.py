@@ -5,8 +5,16 @@ import base64
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
+from django.utils.decorators import method_decorator
+
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.views import View
+from django.utils import timezone
+import uuid
+import os
+from .ml_model import predict_cough
+from .models import AnalysisResult
 
 from django.contrib.auth import login, logout
 # from users.models import AudioFile
@@ -24,7 +32,7 @@ User = get_user_model()
 
 
 # Create your views here.
-
+prob = .4
 
 def register_view(request):
     if request.method == "POST":
@@ -57,77 +65,137 @@ def logout_view(request):
         return redirect("main:home")
 
 
-# # user/views.py
-# @csrf_exempt
-# def upload_audio(request):
-#     if request.method == "POST" and request.user.is_authenticated:
-#         audio_file = request.FILES.get('audio_file')
-#         if audio_file:
-#             recording = AudioFile.objects.create(
-#                 user=request.user, file=audio_file)
-#             # Trigger ML task (via Celery or API call)
-#             # start_ml_processing.delay(recording.id)  # Example Celery task
-#             return JsonResponse({"message": "Audio uploaded successfully!", "file_url": recording.file.url})
-#         return JsonResponse({"error": "No file uploaded."}, status=400)
-#     return JsonResponse({"error": "Unauthorized or invalid request"}, status=403)
+@method_decorator(csrf_exempt, name="dispatch")
+class DashboardInputView(View):
+    """
+    GET:  render the recording + questionnaire form
+    POST: decode & save audio, run the CNN, save symptoms & result, redirect to results
+    """
+    template_name = "dashboard/input.html"
+
+    def get(self, request):
+        context = {
+            "fever_choices": [
+                ("no",   "No"),
+                ("mild", "Mild"),
+                ("high", "High"),
+            ],
+            "sore_throat_choices": [
+                ("no",     "No"),
+                ("mild",   "Mild"),
+                ("severe", "Severe"),
+            ],
+            "difficulty_breathing_choices": [
+                ("no",        "No"),
+                ("slight",    "Slight"),
+                ("significant", "Significant"),
+            ],
+            "energy_level_choices": [
+                ("normal",   "Normal"),
+                ("low",      "Low"),
+                ("very_low", "Very Low"),
+            ],
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request):
+        # 1) Decode & save the audio with a unique filename
+        audio_data = request.POST.get("audio", "")
+        wav_path = None
+        if audio_data:
+            header, b64 = audio_data.split(",", 1)
+            wav_bytes = base64.b64decode(b64)
+            filename = f"user_{request.user.id}_{uuid.uuid4().hex}.wav"
+            wav_path = os.path.join(settings.MEDIA_ROOT, filename)
+            with open(wav_path, "wb") as f:
+                f.write(wav_bytes)
+
+        # 2) Run the CNN model (if we have audio)
+        if wav_path:
+            results = predict_cough(wav_path)
+        else:
+            results = {"healthy": 0.0, "covid": 0.0}
+
+        # 3) Determine label from probabilities
+        covid_p = results["covid"]
+        if covid_p > prob:
+            label = "covid"
+        # elif covid_p > 0.2:
+        #     label = "symptomatic"
+        else:
+            label = "healthy"
+
+        # 4) Collect symptom answers
+        symptoms = {
+            "fever":               request.POST.get("fever"),
+            "sore_throat":         request.POST.get("sore_throat"),
+            "difficulty_breathing": request.POST.get("difficulty_breathing"),
+            "energy_level":        request.POST.get("energy_level"),
+        }
+
+        # 5) Persist the result to the database
+        AnalysisResult.objects.create(
+            user=request.user,
+            healthy_prob=results["healthy"],
+            covid_prob=results["covid"],
+            label=label
+        )
+
+        # 6) Store latest in session for summary card
+        request.session["cough_results"] = results
+        request.session["symptoms"] = symptoms
+
+        return redirect("users:dashboard_results")
+    
+class DashboardResultsView(View):
+    """
+    GET: render the results page, showing the latest summary plus a timeline chart
+    """
+    template_name = "dashboard/results.html"
+
+    def get(self, request):
+        # Pull the latest CNN run from session (for the top card)
+        results = request.session.pop("cough_results", None)
+        symptoms = request.session.pop("symptoms", {})
+
+        if results is None:
+            return redirect("users:dashboard_input")
+
+        # Format the summary status
+        covid_p = results.get("covid", 0.0)
+        status_label = "COVID Likely" if covid_p > prob else "No COVID"
+        confidence = round(covid_p * 100, 1)
+
+        # Build the timeline from all past AnalysisResult objects
+        history = AnalysisResult.objects.filter(user=request.user)
+
+        timeline_dates = [
+            ar.timestamp.strftime("%Y-%m-%d %H:%M")
+            for ar in history
+        ]
+        status_map = {"healthy": 0, "covid": 1}
+        timeline_vals = [
+            status_map.get(ar.label, 0)
+            for ar in history
+        ]
+
+        context = {
+            "status": {
+                "label":      status_label,
+                "confidence": confidence,
+                "timestamp":  timezone.now(),
+            },
+            "chart_labels": ['Healthy', 'COVID'],
+            "chart_dates":  timeline_dates,
+            "chart_vals":   timeline_vals,
+            "symptoms":     symptoms,
+        }
+        return render(request, self.template_name, context)
+
 
 @login_required
 def record_audio(request):
     return render(request, "users/record_audio.html")
-
-
-# @login_required
-# def upload_audio(request):
-#     if request.method == "POST" and request.FILES.get("audio"):
-#         audio = AudioFile.objects.create(
-#             user=request.user,
-#             file=request.FILES["audio"]
-#         )
-#         return JsonResponse({
-#             "message": "Audio uploaded successfully!",
-#             "file_url": audio.file.url
-#         })
-#     return JsonResponse({"error": "Invalid request"}, status=400)
-
-
-# @login_required
-# def upload_audio(request):
-#     if request.method == "POST":
-#         # Option 1: Check if a file was uploaded (e.g. via FormData with Blob)
-#         if request.FILES.get("audio"):
-#             audio = AudioFile.objects.create(
-#                 user=request.user,
-#                 file=request.FILES["audio"]
-#             )
-#             return JsonResponse({
-#                 "message": "Audio uploaded successfully!",
-#                 "file_url": audio.file.url
-#             })
-
-#         # Option 2: Check for a base64-encoded audio string in POST data
-#         audio_data = request.POST.get("audio")
-#         if audio_data:
-#             try:
-#                 # Expected format: "data:audio/wav;base64,AAAA..."
-#                 header, encoded = audio_data.split(',', 1)
-#                 # You can add additional checks on header if needed
-#                 audio_content = base64.b64decode(encoded)
-#                 # Create a ContentFile, giving it a filename
-#                 audio_file = ContentFile(audio_content, name="recording.wav")
-#                 logger.debug("Using storage: %s", settings.DEFAULT_FILE_STORAGE)
-
-#                 audio = AudioFile.objects.create(
-#                     user=request.user,
-#                     file=audio_file
-#                 )
-#                 return JsonResponse({
-#                     "message": "Audio uploaded successfully!",
-#                     "file_url": audio.file.url
-#                 })
-#             except Exception as e:
-#                 return JsonResponse({"error": "Failed to decode audio data: " + str(e)}, status=400)
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
 
 logger = logging.getLogger(__name__)
 
@@ -136,31 +204,32 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
+@csrf_exempt
 def upload_audio(request):
-    if request.method == "POST":
-        audio_data = request.POST.get("audio")
-        if audio_data:
+    if request.method == "POST" and request.user.is_authenticated:
+        audio_data = request.POST.get("audio", "")
+        if not audio_data:
+            return JsonResponse({"error": "No audio data"}, status=400)
 
-            # Log the first 100 characters (for debugging)
-            # logger.debug("DEBUG is set to: %s", settings.DEBUG)
-            # logger.debug("audio_data: %s", audio_data[:100])
-            try:
-                header, encoded = audio_data.split(',', 1)
-                audio_content = base64.b64decode(encoded)
-                audio_file = ContentFile(audio_content, name="recording.wav")
-                audio = AudioFile.objects.create(
-                    user=request.user,
-                    file=audio_file
-                )
-                return redirect("users:record_audio")
-            except Exception as e:
-                return JsonResponse({"error": "Failed to decode audio data: " + str(e)}, status=400)
-        else:
-            logger.debug("No audio data found in POST.")
-            return JsonResponse({"error": "No audio data found"}, status=400)
-    return JsonResponse({"error": "Invalid request"}, status=400)
+        # 1) Decode & save to a unique WAV
+        header, b64 = audio_data.split(",", 1)
+        wav_bytes = base64.b64decode(b64)
+        filename = f"user_{request.user.id}_{uuid.uuid4().hex}.wav"
+        save_path = os.path.join(settings.MEDIA_ROOT, filename)
+        with open(save_path, "wb") as f:
+            f.write(wav_bytes)
 
+        # 2) ***RERUN*** your model on this new file
+        results = predict_cough(save_path)
+        # results == {"healthy": 0.23, "covid": 0.77} (for example)
 
+        # 3) Return the fresh results
+        return JsonResponse({
+            "message":      "Analysis complete",
+            "results":      results,
+        })
+
+    return JsonResponse({"error": "Unauthorized"}, status=403)
 
 
 @login_required

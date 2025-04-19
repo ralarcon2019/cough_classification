@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block head_block %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block title %}Analysis History{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col-md-3 pb-4">
+            <div class="border rounded bg-light text-center py-3">
+                <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+      </div>
+    </div>
+  <!-- Status summary -->
+   <row class="row mb-4">
+    <row class="col-12">
+        <div class="card mb-4 p-4 text-center bg-light">
+           <h4>Latest Result: {{ status.label }}</h4>
+           <p>{{ status.confidence }}% Confidence</p>
+           <small>at {{ status.timestamp|date:"M d, Y H:i" }}</small>
+        </div>
+
+    </row>
+   </row>
+
+  <!-- Timeline -->
+<div class="row mb-4">
+  <div class="col-12"> <!-- ← full width now! -->
+    <div class="border rounded bg-light p-3" style="height:250px;">
+      <h6>Recording Activity</h6>
+      <div class="chart-container" style="position: relative; height:100%; width:100%;">
+        <canvas id="recordingTimelineChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+<canvas id="recordingTimelineChart"></canvas>
+<script>
+  const recDates = {{ chart_dates|safe }};
+  const recVals  = {{ chart_vals|safe }};  // 0 or 1
+
+  const binColor  = ['#28a745','#dc3545'];
+  const recColors = recVals.map(v=>binColor[v]||'#007bff');
+
+  const recCtx = document
+    .getElementById('recordingTimelineChart')
+    .getContext('2d');
+
+  new Chart(recCtx, {
+    type:'line',
+    data:{
+      labels: recDates.map(ts=>{
+        const d=new Date(ts);
+        return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
+      }),
+      datasets:[{
+        data: recVals,
+        stepped:false,
+        tension:0,
+        pointRadius:6,
+        pointBackgroundColor:recColors,
+        pointBorderColor:  recColors,
+        borderColor:'#007bff',
+        borderWidth:2,
+        fill:false,
+        spanGaps:true
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        y:{
+          suggestedMin:-.5,suggestedMax:1.5,
+          min:-.5, max:1.5,
+          ticks:{
+            stepSize:.5,
+            callback: v => {
+        if (v === 0) return "Healthy";
+        if (v === 1) return "COVID";
+        return "";
+            }
+          }
+        },
+        x:{
+          ticks:{ maxRotation:45, minRotation:45, autoSkip:true },
+          title:{ display:true, text:'Date (MM/DD)' }
+        }
+      },
+      plugins:{ legend:{display:false} }
+    }
+  });
+
+</script>
+{% endblock %}

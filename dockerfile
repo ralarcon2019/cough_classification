@@ -1,22 +1,31 @@
+# Dockerfile
+
+# 1) Start from the official Python 3.11 slim image
 FROM python:3.11-slim
 
-# install system deps
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-       ffmpeg \
-       libsndfile1 \
-  && rm -rf /var/lib/apt/lists/*
+# 2) Install OS‑level deps: ffmpeg + libsndfile
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ffmpeg \
+      libsndfile1 && \
+    rm -rf /var/lib/apt/lists/*
 
+# 3) Set your working dir
 WORKDIR /code
 
-# copy and install Python deps
+# 4) Copy and install Python deps
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# tell pip to pull Torch CPU wheels from the PyTorch index as an extra repo:
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir \
+      --extra-index-url https://download.pytorch.org/whl/cpu \
+      -r requirements.txt
 
-# copy the rest of your code
+# 5) Copy the rest of your Django app
 COPY . .
 
-# expose port and launch
-EXPOSE 8000
+# 6) Collect static & migrate (if you need)
+RUN python manage.py collectstatic --noinput
+
+# 7) Your CMD (or you can wire this up in App Platform processes)
 CMD ["gunicorn", "cough_classification.wsgi:application", "--bind", "0.0.0.0:8000"]

@@ -32,14 +32,14 @@ User = get_user_model()
 
 
 # Create your views here.
-prob = .4
+prob = .8
 
 def register_view(request):
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             login(request, form.save())
-            return redirect("main:home")
+            return redirect("users:dashboard_input")
     else:
         form = CustomUserCreationForm()
     return render(request, "users/register.html", {"form": form})
@@ -53,7 +53,7 @@ def login_view(request):
             if 'next' in request.POST:
                 return redirect(request.POST.get('next'))
             else:
-                return redirect("main:home")
+                return redirect("users:dashboard_input")
     else:
         form = AuthenticationForm()
     return render(request, "users/login.html", {"form": form})

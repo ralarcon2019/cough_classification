@@ -20,6 +20,8 @@ import os
 import dj_database_url
 
 
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
@@ -34,6 +36,12 @@ env = environ.Env()
 # MEDIA_S3_ACCESS_KEY_ID = env('MEDIA_S3_ACCESS_KEY_ID', default=None)
 # MEDIA_S3_SECRET_ACCESS_KEY = env('MEDIA_S3_SECRET_ACCESS_KEY', default=None)
 # MEDIA_S3_BUCKET_NAME = env('MEDIA_S3_BUCKET_NAME', default=None)
+
+
+LOGIN_REDIRECT_URL = 'users:dashboard'    # or '/users/dashboard/'
+
+# (Optional) where to send them after logout
+LOGOUT_REDIRECT_URL = 'home'
 
 
 

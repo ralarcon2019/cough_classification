@@ -5,7 +5,244 @@
 
 {% block head_block %}
   <meta name="csrf-token" content="{{ csrf_token }}">
-  {% comment %} <script src="{% static 'js/audio_record.js' %}" defer></script> {% endcomment %}
+{% endblock head_block %}
+
+{% block body %}
+<div class="container my-5">
+  <form method="POST" action="" id="dashboardForm">
+    {% csrf_token %}
+
+    <div class="row mb-4">
+      <!-- USER NAME BOX -->
+      <div class="col-md-3 pb-4">
+        <div class="border rounded bg-light text-center py-3">
+          <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- 1. Record Cough Sample -->
+      <div class="col-md-6 mb-4">
+        <div class="card p-4 h-100">
+          <h5>1. Record Cough Sample</h5>
+          <hr>
+          <p class="small text-muted">Max length: 3 seconds</p>
+
+          <!-- mic button -->
+          <div id="recorder" class="text-center mb-3">
+            <button type="button"
+                    id="recordToggle"
+                    class="btn btn-primary btn-lg w-100">
+              Record
+            </button>
+          </div>
+
+          <!-- progress bar -->
+          <div class="progress mb-2">
+            <div id="recordProgress"
+                 class="progress-bar"
+                 role="progressbar"
+                 style="width: 0%"></div>
+          </div>
+
+          <p class="mb-1">Recording preview:</p>
+          <audio id="audioPlayback" controls class="w-100"></audio>
+
+          <!-- hidden field to carry base64 -->
+          <input type="hidden" name="audio" id="audioFileInput">
+        </div>
+      </div>
+
+      <!-- 2. Symptom Questionnaire -->
+      <div class="col-md-6 mb-4">
+        <div class="card p-4 h-100">
+          <h5>2. Symptom Questionnaire</h5>
+          <hr>
+
+          <!-- Fever -->
+          <div class="mb-3">
+            <label class="form-label">Do you have a fever?</label><br>
+            {% for val,label in fever_choices %}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input"
+                     type="radio"
+                     name="fever"
+                     id="fever_{{ val }}"
+                     value="{{ val }}"
+                     {% if forloop.first %}checked{% endif %}>
+              <label class="form-check-label"
+                     for="fever_{{ val }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Sore throat -->
+          <div class="mb-3">
+            <label class="form-label">
+              Are you experiencing a sore throat?
+            </label><br>
+            {% for val,label in sore_throat_choices %}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input"
+                     type="radio"
+                     name="sore_throat"
+                     id="sore_{{ val }}"
+                     value="{{ val }}"
+                     {% if forloop.first %}checked{% endif %}>
+              <label class="form-check-label"
+                     for="sore_{{ val }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Difficulty breathing -->
+          <div class="mb-3">
+            <label class="form-label">
+              Do you have difficulty breathing?
+            </label><br>
+            {% for val,label in difficulty_breathing_choices %}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input"
+                     type="radio"
+                     name="difficulty_breathing"
+                     id="breath_{{ val }}"
+                     value="{{ val }}"
+                     {% if forloop.first %}checked{% endif %}>
+              <label class="form-check-label"
+                     for="breath_{{ val }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Energy level -->
+          <div class="mb-3">
+            <label class="form-label">How is your energy level?</label><br>
+            {% for val,label in energy_level_choices %}
+            <div class="form-check form-check-inline">
+              <input class="form-check-input"
+                     type="radio"
+                     name="energy_level"
+                     id="energy_{{ val }}"
+                     value="{{ val }}"
+                     {% if forloop.first %}checked{% endif %}>
+              <label class="form-check-label"
+                     for="energy_{{ val }}">{{ label }}</label>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Submit For Analysis -->
+    <div class="row">
+      <div class="col-12 text-center">
+        <button type="submit"
+                class="btn btn-success btn-lg px-5">
+          3. Submit For Analysis
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const btn          = document.getElementById("recordToggle");
+  const form         = document.getElementById("dashboardForm");
+  const input        = document.getElementById("audioFileInput");
+  const progressBar  = document.getElementById("recordProgress");
+  const audioEl      = document.getElementById("audioPlayback");
+
+  let mediaRecorder,
+      audioChunks   = [],
+      audioStream,
+      progressInterval,
+      autoStopTimeout;
+
+  btn.addEventListener("click", async () => {
+    // ► START RECORDING
+    if (!mediaRecorder) {
+      try {
+        audioChunks = [];
+        audioStream  = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(audioStream);
+
+        mediaRecorder.onstart = () => {
+          // reset & animate progress bar
+          let elapsed = 0;
+          progressBar.style.width = "0%";
+          progressInterval = setInterval(() => {
+            elapsed += 50;
+            progressBar.style.width = Math.min(100, elapsed/30) + "%";
+            if (elapsed >= 3000) clearInterval(progressInterval);
+          }, 50);
+
+          // auto‐stop at 3s
+          autoStopTimeout = setTimeout(() => {
+            if (mediaRecorder.state === "recording") {
+              mediaRecorder.stop();
+            }
+          }, 3000);
+
+          btn.textContent = "Stop Recording";
+        };
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          // clean up timers
+          clearInterval(progressInterval);
+          clearTimeout(autoStopTimeout);
+          progressBar.style.width = "0%";
+
+          // stop mic
+          audioStream.getTracks().forEach(t => t.stop());
+
+          // preview
+          const blob = new Blob(audioChunks, { type: "audio/wav" });
+          audioEl.src = URL.createObjectURL(blob);
+
+          // store base64
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            input.value = reader.result;
+            // ready to re‐record if you like
+            mediaRecorder = null;
+            btn.textContent = "Record";
+          };
+          reader.readAsDataURL(blob);
+        };
+
+        mediaRecorder.start();
+      } catch (err) {
+        console.error("Recording failed:", err);
+      }
+      return;
+    }
+
+    // ► STOP RECORDING
+    if (mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      return;
+    }
+  });
+});
+</script>
+{% endblock body %}
+
+
+{% comment %} {% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Dashboard – Input{% endblock %}
+
+{% block head_block %}
+  <meta name="csrf-token" content="{{ csrf_token }}">
+
 {% endblock head_block %}
 
 {% block body %}
@@ -205,4 +442,4 @@
 });
 </script>
 
-{% endblock body %}
+{% endblock body %} {% endcomment %}

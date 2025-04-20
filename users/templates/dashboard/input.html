@@ -12,13 +12,24 @@
     cursor: auto;
     {% comment %} cursor: not-allowed; {% endcomment %}
   }
+
+  #loadingOverlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255,255,255,0.8);
+      z-index: 9999;  /* above everything */
+      align-items: center;
+      justify-content: center;
+    }
 </style>
 
 {% endblock head_block %}
 
 {% block body %}
 <div class="container my-5">
-  <form method="POST" action="" id="dashboardForm">
+  <form method="POST" action="" id="dashboardForm" >
     {% csrf_token %}
 
     <div class="row mb-4">
@@ -167,15 +178,28 @@
   </div>
 </div>
 
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="text-center">
+    <div class="spinner-border" role="status" style="width:3rem; height:3rem;">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-3">Processing your recording…</p>
+  </div>
+</div>
+
+
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   // Elements
+  const form          = document.getElementById("dashboardForm");
   const recordBtn     = document.getElementById("recordToggle");
   const progressBar   = document.getElementById("recordProgress");
   const audioPlayback = document.getElementById("audioPlayback");
   const audioInput    = document.getElementById("audioFileInput");
   const submitBtn     = document.getElementById("submitBtn");
-  const form          = document.getElementById("dashboardForm");
+  const overlay       = document.getElementById("loadingOverlay");
 
   // Questionnaire field names
   const questions = [
@@ -205,102 +229,82 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Show warning modal or loading overlay, then submit
+  form.addEventListener("submit", e => {
+    // block if not ready
+    if (!hasRecording() || !allAnswered()) {
+      e.preventDefault();
+      const modal = new bootstrap.Modal(document.getElementById("warningModal"));
+      modal.show();
+      return;
+    }
+    // show loading overlay BEFORE navigation
+    e.preventDefault();
+    overlay.style.display = "flex";
+    submitBtn.disabled = true;
+    // tiny delay to allow the overlay to render
+    setTimeout(() => form.submit(), 50);
+  });
+
   // Watch questionnaire changes
   questions.forEach(name => {
     document.querySelectorAll(`input[name="${name}"]`)
       .forEach(el => el.addEventListener("change", updateSubmitStyle));
   });
 
-  // Block premature submits
- // form.addEventListener("submit", e => {
-   // if (!hasRecording() || !allAnswered()) {
-  //    e.preventDefault();
- //     alert(" Please record a cough AND answer all questions before submitting.");
- //   }
- // });
-
-  // Block premature submits
-  form.addEventListener("submit", e => {
-    if (!hasRecording() || !allAnswered()) {
-      e.preventDefault();
-      // show the modal
-      const modalEl = document.getElementById('warningModal');
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
-    }
-  });
-
   // Record / Stop / Record toggle
   recordBtn.addEventListener("click", async () => {
-    // 1) Start recording
     if (!mediaRecorder) {
-      try {
-        audioChunks = [];
-        audioStream  = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(audioStream);
-
-        mediaRecorder.ondataavailable = e => {
-          if (e.data.size > 0) audioChunks.push(e.data);
+      // Start recording
+      audioChunks = [];
+      audioStream  = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(audioStream);
+      mediaRecorder.ondataavailable = e => {
+        if (e.data.size) audioChunks.push(e.data);
+      };
+      mediaRecorder.onstop = () => {
+        clearInterval(progressInterval);
+        progressBar.style.width = "100%";
+        audioStream.getTracks().forEach(t => t.stop());
+        const blob = new Blob(audioChunks, { type: "audio/wav" });
+        audioPlayback.src = URL.createObjectURL(blob);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          audioInput.value = reader.result;
+          updateSubmitStyle();
         };
+        reader.readAsDataURL(blob);
+        mediaRecorder = null;
+        recordBtn.textContent = "Record";
+        recordBtn.classList.replace("btn-danger", "btn-primary");
+      };
+      mediaRecorder.start();
 
-        mediaRecorder.onstop = () => {
-          clearInterval(progressInterval);
-          progressBar.style.width = "100%";
+      // animate 3s progress
+      const start = Date.now();
+      progressBar.style.width = "0%";
+      progressInterval = setInterval(() => {
+        const pct = Math.min((Date.now() - start) / 3000 * 100, 100);
+        progressBar.style.width = pct + "%";
+      }, 50);
 
-          // stop mic & show playback
-          audioStream.getTracks().forEach(t => t.stop());
-          const blob = new Blob(audioChunks, { type: "audio/wav" });
-          audioPlayback.src = URL.createObjectURL(blob);
+      // auto‑stop after 3s
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === "recording") {
+          mediaRecorder.stop();
+        }
+      }, 3000);
 
-          // base64 → hidden input
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            audioInput.value = reader.result;
-            updateSubmitStyle();
-          };
-          reader.readAsDataURL(blob);
+      recordBtn.textContent = "Stop";
+      recordBtn.classList.replace("btn-primary", "btn-danger");
 
-          // reset button
-          mediaRecorder = null;
-          recordBtn.textContent = "Record";
-          recordBtn.classList.remove("btn-danger");
-          recordBtn.classList.add("btn-primary");
-        };
-
-        // actually start
-        mediaRecorder.start();
-
-        // animate 3s progress
-        const start = Date.now();
-        progressBar.style.width = "0%";
-        progressInterval = setInterval(() => {
-          const pct = Math.min((Date.now() - start) / 3000 * 100, 100);
-          progressBar.style.width = pct + "%";
-        }, 50);
-
-        // auto‑stop after 3s
-        setTimeout(() => {
-          if (mediaRecorder && mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-          }
-        }, 3000);
-
-        // UI → stop
-        recordBtn.textContent = "Stop";
-        recordBtn.classList.remove("btn-primary");
-        recordBtn.classList.add("btn-danger");
-
-      } catch (err) {
-        console.error("Microphone error:", err);
-      }
-
-    // 2) If recording, stop now
     } else if (mediaRecorder.state === "recording") {
+      // manual stop
       mediaRecorder.stop();
     }
   });
 
-  // initial submit‑button state
+  // init
   updateSubmitStyle();
 });
 </script>

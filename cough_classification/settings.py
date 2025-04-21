@@ -39,7 +39,7 @@ env = environ.Env()
 
 
 LOGIN_REDIRECT_URL = 'users:dashboard'    # or '/users/dashboard/'
-
+LOGIN_URL = 'users:login'
 # (Optional) where to send them after logout
 LOGOUT_REDIRECT_URL = 'home'
 

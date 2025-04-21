@@ -20,6 +20,7 @@ def project(request):
         'projectPlan': 'documents/Project Plan.pdf',
         'projectPlan2': 'documents/Project Plan Spring.pdf',
         'webTesting': 'documents/Web Testing Plan.pdf',
+        'poster': 'documents/poster.pdf',
     }
     return render(request, 'main/project.html', context)
 

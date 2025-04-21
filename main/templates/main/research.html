@@ -1,27 +1,173 @@
-{% extends "layout.html" %}
+{% extends "layout.html" %} {% load static %} {% block title%}Research{%endblock %} {% block body %}
+<div class="container my-5">
+  <!-- Logo -->
+  <div class="text-center mb-5">
+    <img
+      src="{% static 'img/vocovid.png' %}"
+      alt="VOCOVID logo"
+      style="max-width: 300px"
+    />
+  </div>
 
-{% load static %}
+  <!-- Overview Section -->
+  <section class="mb-5">
+    <h2 class="text-primary">Overview</h2>
+    <p>
+      VOCOVID uses a Convolutional Neural Network (CNN) to identify if your
+      cough recording shows symptoms of COVID- 19. While it 's intended as a
+      screening tool (not an official diagnosis), it can help you decide when to
+      seek further medical advice.
+    </p>
+  </section>
+
+  <!-- Mel- Spectrograms Section -->
+  <section class="mb-5">
+    <h2 class="text-primary">Mel- Spectrograms</h2>
+    <p>
+      Mel- Spectrograms turn an audio signal into a visual heatmap of
+      frequencies over time—ideal for spotting the subtle breathing patterns and
+      “wet vs. dry” cough textures that our CNN needs to detect COVID- 19.
+    </p>
 
 
-{% block title %}
-Research
-{% endblock title %}
+      <div class="text-center my-4">
+    <img
+      src="{% static 'img/spectrogram.png' %}"
+      alt="Example Cough Mel‑Spectrogram"
+      class="img-fluid rounded border w-50"
+    >
+  </div>
+    <div class="col-md-6">
+      <h5>Hyperparameters</h5>
+      <ul>
+        <li>Target Sample Rate: 22 050 Hz</li>
+        <li>FFT Window Length: 2 048</li>
+        <li>Hop Length for STFT: 256</li>
+        <li>Number of Mel Bands: 256</li>
+        <li>Max Frequency: 8 000 Hz</li>
+      </ul>
+      <p class="small text-muted">
+        We trim each spectrogram to one cough 's duration to avoid background
+        noise interference.
+      </p>
+    </div>
 
-{% block body %}
+    <p class="mt-3">
+      By compressing frequencies into the Mel scale, we lower our model 's
+      computational load while focusing on the pitches humans actually hear.
+    </p>
+  </section>
+
+  <!-- CNN Section -->
+  <section class="mb-5">
+    <h2 class="text-primary">Convolutional Neural Network</h2>
+    <p>
+      CNNs shine on 2D inputs like Mel- Spectrograms—they learn spatial patterns
+      of energy across time and frequency. While some local detail can be lost,
+      attention modules help our network focus on the most salient cough
+      features.
+    </p>
+  </section>
+
+  <!-- Our Model Section -->
+  <section class="mb-5">
+    <h2 class="text-primary">Our Model Architecture</h2>
+    <p>
+      We built an Attention- Enhanced CNN with three convolutional blocks,
+      followed by a classification head:
+    </p>
+    <pre class="bg-light p-3 rounded">
+Block 1: Conv 3x3 (1→32) → BatchNorm → ReLU → MaxPool 2 x2 → Channel- Attention → Spatial- Attention  
+Block 2: Conv 3x3 (32→64) → BatchNorm → ReLU → MaxPool 2 x2 → Channel- Attention → Spatial- Attention  
+Block 3: Conv 3x3 (64→128) → BatchNorm → ReLU → MaxPool 2 x2 → Channel- Attention → Spatial- Attention  
+Head: AdaptiveAvgPool 1 x1 → Flatten → FC 128→64 → ReLU → Dropout 0.5 → FC 64→2 (logits)
+    </pre>
+  </section>
+
+  <!-- Workflow / Benchmark Section -->
+  <section class="mb-5">
+    <h2 class="text-primary">Current ML Workflow & Benchmark</h2>
+
+    <div class="text-center mb-4">
+      <img
+        src="{% static 'img/workflow.png' %}"
+        alt="Machine Learning Workflow"
+        class="img-fluid rounded border"
+        style="max-width: 300px"
+      />
+    </div>
+
+    <h5>ResNet50 Benchmark</h5>
+    <p>
+      As a strong off- the- shelf CNN, ResNet50 lets us compare our custom model
+      's performance without extra imbalance- handling steps. We 'll publish
+      those benchmark numbers here soon.
+    </p>
+  </section>
+
+  <!-- Disclaimer -->
+  <section class="text-center mb-5">
+    <p class="text-danger">
+      <strong>Disclaimer:</strong> VOCOVID is a screening tool only and cannot
+      provide an official COVID- 19 diagnosis. Always consult a medical
+      professional for definitive testing.
+    </p>
+  </section>
+
+  <!-- Works Cited -->
+  <section class="mb-5">
+    <h3 class="text-primary">Research as of 11/24/2024</h3>
+    <ul class="list-unstyled">
+      <li>
+        Wolf- Monheim, F. “Spectral and Rhythm Features for Audio Classification
+        with Deep CNNs.” 2024.
+      </li>
+      <li>
+        Luo, K. et al. “Croup and Pertussis Cough Sound Classification
+        Algorithm,” Biomedical Signal Processing and Control, 2024.
+      </li>
+      <li>
+        Ghrabli, S., Elgendi, M. & Menon, C. “Challenges and Opportunities of
+        Deep Learning for Cough- Based COVID- 19 Diagnosis.” Diagnostics, 2022.
+      </li>
+      <li>
+        Awan, M. et al. “Efficient Detection of Knee ACL from MRI Using Deep
+        Learning.” Diagnostics, 2021.
+      </li>
+      <li>
+        Mazerolle, T. “Using VGG16 to Classify Spectrograms.” Kaggle, 2023.
+      </li>
+      <li>
+        Yadav, J. et al. “Audiovisual Multimodal Cough Data Analysis for TB
+        Detection.” 2024.
+      </li>
+      <li>
+        Dentamaro, V. et al. “AUCO ResNet: End- to- End Network for COVID- 19
+        Pre- Screening.” Pattern Recognition, 2022.
+      </li>
+    </ul>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %} {% comment %} {% extends "layout.html" %} {% load static %} {%
+block title %} Research {% endblock title %} {% block body %}
 
 <div class="container my-5">
   <!-- Logo -->
   <div class="text-center mb-5">
-    <img src="{% static '/img/vocovid.png' %}" alt="vocovid" width="40%">
+    <img src="{% static '/img/vocovid.png' %}" alt="vocovid" width="40%" />
   </div>
 
   <!-- Overview Section -->
   <div class="mb-5">
     <h2 class="text-primary">Overview</h2>
     <p>
-      VOCOVID uses a Convolutional Neural Network (CNN) to identify if your cough recording shows symptoms of COVID-19. 
-      While it is intended to screen whether or not users may be presenting symptoms of COVID-19, it should be noted that 
-      VOCOVID is merely a screening tool, and all results cannot be considered an official diagnosis.
+      VOCOVID uses a Convolutional Neural Network (CNN) to identify if your
+      cough recording shows symptoms of COVID-19. While it is intended to screen
+      whether or not users may be presenting symptoms of COVID-19, it should be
+      noted that VOCOVID is merely a screening tool, and all results cannot be
+      considered an official diagnosis.
     </p>
   </div>
 
@@ -29,17 +175,25 @@ Research
   <div class="mb-5">
     <h2 class="text-primary">Mel-Spectrograms</h2>
     <p>
-      Mel Spectrograms create a visual representation of the audio frequencies in a recording, helping identify restricted breathing 
-      or distinguishing between “wet” and “dry” coughs. The x-axis represents time, the y-axis represents frequency, and 
-      the color intensity represents amplitude. This method reduces data dimensionality, making it computationally efficient 
+      Mel Spectrograms create a visual representation of the audio frequencies
+      in a recording, helping identify restricted breathing or distinguishing
+      between “wet” and “dry” coughs. The x-axis represents time, the y-axis
+      represents frequency, and the color intensity represents amplitude. This
+      method reduces data dimensionality, making it computationally efficient
       for our CNN.
     </p>
     <p>
-      Mel Spectrograms allow for efficient identification of COVID-19 cough patterns by focusing on specific audio frequencies 
-      and amplitudes. This also helps train the CNN more effectively by enhancing features needed for accurate testing.
+      Mel Spectrograms allow for efficient identification of COVID-19 cough
+      patterns by focusing on specific audio frequencies and amplitudes. This
+      also helps train the CNN more effectively by enhancing features needed for
+      accurate testing.
     </p>
     <div class="text-center">
-      <img src="{% static 'img/spectrogram.png' %}" alt="Example Cough Mel-Spectrogram" width="55%">
+      <img
+        src="{% static 'img/spectrogram.png' %}"
+        alt="Example Cough Mel-Spectrogram"
+        width="55%"
+      />
     </div>
   </div>
 
@@ -47,9 +201,11 @@ Research
   <div class="mb-5">
     <h2 class="text-primary">Convolutional Neural Network</h2>
     <p>
-      CNNs are the backbone of VOCOVID due to their ability to process Mel Spectrograms. Although CNNs can lose information 
-      in some cases, they are still preferred over RNNs for this project due to their ability to produce feature maps. 
-      These maps enable dataset augmentation and enhance key features for identifying COVID-19 symptoms in audio data.
+      CNNs are the backbone of VOCOVID due to their ability to process Mel
+      Spectrograms. Although CNNs can lose information in some cases, they are
+      still preferred over RNNs for this project due to their ability to produce
+      feature maps. These maps enable dataset augmentation and enhance key
+      features for identifying COVID-19 symptoms in audio data.
     </p>
   </div>
 
@@ -57,28 +213,34 @@ Research
   <div class="mb-5">
     <h2 class="text-primary">Our Model</h2>
     <p>
-      The VOCOVID model uses K-fold cross-validation and pre-processing on Mel-Spectrograms for training. Currently, 
-      the model has two layers for processing data during testing, with plans to increase complexity as testing progresses.
+      The VOCOVID model uses K-fold cross-validation and pre-processing on
+      Mel-Spectrograms for training. Currently, the model has two layers for
+      processing data during testing, with plans to increase complexity as
+      testing progresses.
     </p>
   </div>
 
   <!-- Current Machine Learning Workflow Section -->
   <div class="mb-5">
     <div class="text-center pb-5">
-        <img src="{% static 'img/workflow.png' %}" alt="workflow" width="35%">
+      <img src="{% static 'img/workflow.png' %}" alt="workflow" width="35%" />
     </div>
     <h2 class="text-primary">Current Machine Learning Workflow</h2>
     <h3 class="mt-4">ResNet50</h3>
     <p>
-      ResNet50 serves as the benchmark model for VOCOVID due to its proven accuracy in audio data processing without requiring 
-      preprocessing for imbalance handling. Results from testing with ResNet50 on our dataset will be included soon.
+      ResNet50 serves as the benchmark model for VOCOVID due to its proven
+      accuracy in audio data processing without requiring preprocessing for
+      imbalance handling. Results from testing with ResNet50 on our dataset will
+      be included soon.
     </p>
   </div>
 
   <!-- Disclaimer Section -->
   <div class="text-center mb-5">
     <p class="text-danger">
-      <strong>Disclaimer:</strong> VOCOVID is a screening tool and cannot provide an official COVID-19 diagnosis. Please consult a medical professional for an official diagnosis.
+      <strong>Disclaimer:</strong> VOCOVID is a screening tool and cannot
+      provide an official COVID-19 diagnosis. Please consult a medical
+      professional for an official diagnosis.
     </p>
   </div>
 
@@ -86,17 +248,36 @@ Research
   <div class="mb-5">
     <h2 class="text-primary">Research as of 11/24/2024</h2>
     <ul>
-      <li>Wolf-Monheim, Friedrich. “Spectral and Rhythm Features for Audio Classification with Deep Convolutional Neural Networks.” 2024.</li>
-      <li>Kexin Luo et al., “Croup and Pertussis Cough Sound Classification Algorithm,” Biomedical Signal Processing and Control, 2024.</li>
-      <li>Ghrabli, Syrine et al., "Challenges and Opportunities of Deep Learning for Cough-Based COVID-19 Diagnosis," 2022.</li>
-      <li>Awan, Mazhar et al., "Efficient Detection of Knee Anterior Cruciate Ligament Using Deep Learning," 2021.</li>
-      <li>Mazerolle, Troy. “Using VGG16 to Classify Spectrograms.” Kaggle, 2023.</li>
-      <li>Yadav, Jyoti et al., “Audiovisual Multimodal Cough Data Analysis for Tuberculosis Detection,” 2024.</li>
-      <li>Dentamaro, Vincenzo et al., “AUCO ResNet: An End-to-End Network for COVID-19 Pre-Screening,” 2022.</li>
+      <li>
+        Wolf-Monheim, Friedrich. “Spectral and Rhythm Features for Audio
+        Classification with Deep Convolutional Neural Networks.” 2024.
+      </li>
+      <li>
+        Kexin Luo et al., “Croup and Pertussis Cough Sound Classification
+        Algorithm,” Biomedical Signal Processing and Control, 2024.
+      </li>
+      <li>
+        Ghrabli, Syrine et al., "Challenges and Opportunities of Deep Learning
+        for Cough-Based COVID-19 Diagnosis," 2022.
+      </li>
+      <li>
+        Awan, Mazhar et al., "Efficient Detection of Knee Anterior Cruciate
+        Ligament Using Deep Learning," 2021.
+      </li>
+      <li>
+        Mazerolle, Troy. “Using VGG16 to Classify Spectrograms.” Kaggle, 2023.
+      </li>
+      <li>
+        Yadav, Jyoti et al., “Audiovisual Multimodal Cough Data Analysis for
+        Tuberculosis Detection,” 2024.
+      </li>
+      <li>
+        Dentamaro, Vincenzo et al., “AUCO ResNet: An End-to-End Network for
+        COVID-19 Pre-Screening,” 2022.
+      </li>
     </ul>
   </div>
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-{% endblock body %}
+{% endblock body %} {% endcomment %}

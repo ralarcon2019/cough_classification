@@ -1,72 +1,117 @@
-{% extends "layout.html" %}
-{% load static %}
-
-{% block head_block %}
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% endblock %}
-
-{% block title %}Analysis History{% endblock %}
-
-{% block body %}
+{% extends "layout.html" %} {% load static %} {% block head_block %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %} {% block title %}Analysis History{% endblock %} {% block body %}
 <div class="container my-5">
-    <div class="row mb-4">
-        <div class="col-md-3 pb-4">
-            <div class="border rounded bg-light text-center py-3">
-                <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
-      </div>
-    </div>
-  <!-- Status summary -->
-   <row class="row mb-4">
-    <row class="col-12">
-        <div class="card mb-4 p-4 text-center bg-light">
-           <h4>Latest Result: {{ status.label }}</h4>
-           <p>{{ status.confidence }}% Confidence</p>
-           <small>at {{ status.timestamp|date:"M d, Y H:i" }}</small>
-        </div>
-
-    </row>
-   </row>
-
-  <!-- Timeline -->
-<div class="row mb-4">
-  <div class="col-12"> <!-- ← full width now! -->
-    <div class="border rounded bg-light p-3" style="height:250px;">
-      <h6>Recording Activity</h6>
-      <div class="chart-container" style="position: relative; height:100%; width:100%;">
-        <canvas id="recordingTimelineChart"></canvas>
+  <!-- Name row -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="border rounded bg-light text-center py-3">
+        <strong
+          >{{ request.user.first_name }} {{ request.user.last_name }}</strong
+        >
       </div>
     </div>
   </div>
-</div>
 
+  <!-- Status summary row -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div
+        class="card mb-4 p-4 text-center {% if status.label == 'No COVID' %} border-success text-success bg-success bg-opacity-10 {% elif status.label == 'COVID Likely' %} border-warning text-warning bg-warning bg-opacity-10 {% endif %}"
+      >
+        <h4>Latest Result: {{ status.label }}</h4>
+        <p>{{ status.confidence }}% Confidence</p>
+        <small>at {{ status.timestamp|date:"M d, Y H:i" }}</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recording Activity + View Buttons -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="border rounded bg-light p-3 pb-4">
+        <h6>Recording Activity</h6>
+
+        <!-- Chart gets a fixed height here -->
+        <div
+          class="chart-container mb-3"
+          style="position: relative; height: 250px; width: 100%"
+        >
+          <canvas id="recordingTimelineChart"></canvas>
+        </div>
+
+        <!-- Buttons sit inside the same card -->
+        <div class="d-flex justify-content-start">
+          <div id="viewButtons" class="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              class="btn btn-outline-primary active"
+              data-range="all"
+            >
+              All Time
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-range="7"
+            >
+              Last 7 Days
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              data-range="3"
+            >
+              Last 3 Days
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
-<canvas id="recordingTimelineChart"></canvas>
+<!-- /.container -->
+
 <script>
-  const recDates = {{ chart_dates|safe }};
-  const recVals  = {{ chart_vals|safe }};  // 0 or 1
+  // Data from Django
+  const allDates = {{ chart_dates|safe }};
+  const allVals  = {{ chart_vals|safe }};
 
-  const binColor  = ['#28a745','#dc3545'];
-  const recColors = recVals.map(v=>binColor[v]||'#007bff');
+  // Format timestamp → "MM/DD"
+  function fmt(ts) {
+    const d = new Date(ts);
+    return String(d.getMonth()+1).padStart(2,'0')
+         + '/' + String(d.getDate()).padStart(2,'0');
+  }
 
-  const recCtx = document
-    .getElementById('recordingTimelineChart')
-    .getContext('2d');
+  // Return filtered slice
+  function filterData(range) {
+    if (range==='all') return { dates:allDates, vals:allVals };
+    const cutoff = Date.now() - parseInt(range)*24*3600*1000;
+    const dates=[], vals=[];
+    allDates.forEach((ts,i)=>{
+      if (new Date(ts).getTime()>=cutoff){
+        dates.push(ts);
+        vals.push(allVals[i]);
+      }
+    });
+    return { dates, vals };
+  }
 
-  new Chart(recCtx, {
+  // Initialize Chart.js
+  const ctx = document.getElementById('recordingTimelineChart').getContext('2d');
+  const recordingChart = new Chart(ctx, {
     type:'line',
     data:{
-      labels: recDates.map(ts=>{
-        const d=new Date(ts);
-        return `${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`;
-      }),
+      labels: allDates.map(fmt),
       datasets:[{
-        data: recVals,
+        data: allVals,
         stepped:false,
         tension:0,
         pointRadius:6,
-        pointBackgroundColor:recColors,
-        pointBorderColor:  recColors,
+        pointBackgroundColor: allVals.map(v=> v? '#dc3545':'#28a745'),
+        pointBorderColor:     allVals.map(v=> v? '#dc3545':'#28a745'),
         borderColor:'#007bff',
         borderWidth:2,
         fill:false,
@@ -74,29 +119,46 @@
       }]
     },
     options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      scales:{
-        y:{
-          suggestedMin:-.5,suggestedMax:1.5,
-          min:-.5, max:1.5,
-          ticks:{
-            stepSize:.5,
-            callback: v => {
-        if (v === 0) return "Healthy";
-        if (v === 1) return "COVID";
-        return "";
+        responsive:true,
+        maintainAspectRatio:false,
+        scales:{
+          y:{
+            suggestedMin:-.5,suggestedMax:1.5,
+            min:-.5, max:1.5,
+            ticks:{
+              stepSize:.5,
+              callback: v => {
+          if (v === 0) return "Healthy";
+          if (v === 1) return "COVID";
+          return "";
+              }
             }
+          },
+          x:{
+            ticks:{ maxRotation:45, minRotation:45, autoSkip:true },
+            title:{ display:true, text:'Date (MM/DD)' }
           }
         },
-        x:{
-          ticks:{ maxRotation:45, minRotation:45, autoSkip:true },
-          title:{ display:true, text:'Date (MM/DD)' }
-        }
-      },
-      plugins:{ legend:{display:false} }
+      plugins:{ legend:{ display:false } }
     }
   });
 
+  // Wire up filter buttons
+  document.getElementById('viewButtons').addEventListener('click', e=>{
+    if (e.target.tagName!=='BUTTON') return;
+    const range = e.target.dataset.range;
+    // toggle active
+    Array.from(e.currentTarget.children)
+         .forEach(btn=> btn.classList.toggle('active', btn===e.target));
+    // get filtered
+    const { dates, vals } = filterData(range);
+    // update chart
+    recordingChart.data.labels = dates.map(fmt);
+    const ds = recordingChart.data.datasets[0];
+    ds.data = vals;
+    ds.pointBackgroundColor = vals.map(v=> v? '#dc3545':'#28a745');
+    ds.pointBorderColor     = vals.map(v=> v? '#dc3545':'#28a745');
+    recordingChart.update();
+  });
 </script>
-{% endblock %}
+{% endblock %} 

@@ -1,97 +1,147 @@
 {% extends "layout.html" %}
-
 {% load static %}
 
-
-{% block title %}
-VOCOVID
-{% endblock title %}
+{% block title %}VOCOVID{% endblock title %}
 
 {% block body %}
 <div class="container my-5">
-  <!-- Logo Section -->
-  <div class="text-center mb-4">
-    <img src="{% static '/img/vocovid.png' %}" alt="vocovid" width="40%">
+
+  <!-- Logo -->
+  <div class="text-center mb-5">
+    <img src="{% static 'img/vocovid.png' %}" alt="VOCOVID logo" style="max-width: 300px;">
   </div>
 
-  <!-- Mission Statement Section -->
-  <div class="text-center mb-5">
+  <!-- Mission Statement -->
+  <section class="text-center mb-5">
     <h2 class="mb-3">Our Mission</h2>
     <p class="lead">
       VOCOVID is dedicated to providing information to users to better inform
       their medical decisions prior to visiting a hospital or urgent care locally.
     </p>
+  </section>
+
+  <!-- Why You Should Use VOCOVID -->
+  <section class="mb-5">
+    <h2 class="mb-4 text-center">Why You Should Use VOCOVID</h2>
+    <div class="row gx-4 gy-4">
+      <div class="col-md-4">
+        <div class="p-4 text-white bg-primary rounded shadow-sm h-100">
+          <h5>Quick &amp; Easy</h5>
+          <p>Record your cough and let us do the rest!</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 text-white bg-success rounded shadow-sm h-100">
+          <h5>Accurate</h5>
+          <p>69% accurate Attention-Enhanced CNN trained to recognize COVID symptoms from a cough.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 text-dark bg-warning rounded shadow-sm h-100">
+          <h5>Non-Invasive</h5>
+          <p>Safely test as frequently as needed, and watch your results chart grow in real time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div class="text-center mt-4">
+    <a href="{% url 'users:dashboard_input' %}" class="btn btn-primary btn-lg">
+      Get Started
+    </a>
   </div>
 
   <!-- Further Explanation -->
-  <div class="mb-5">
-    <h3>What is VOCOVID?</h3>
+  <section class="mb-5">
+    <h3>What Is VOCOVID?</h3>
     <p>
       By providing results based on a convolutional neural network trained on a
       dataset labeled by licensed doctors, VOCOVID is equipped to inform users
-      of when they are exhibiting COVID-19 symptoms as opposed to symptoms of another
-      illness.
+      when they are exhibiting COVID-19 symptoms as opposed to another illness.
     </p>
-  </div>
+  </section>
 
   <!-- Use Cases Explanation -->
-  <div class="mb-5">
-    <h3>How Does It Work?</h3>
+  <section class="mb-5">
+    <h3>Use Cases</h3>
     <div class="row">
-      <!-- Healthy -->
-      <div class="col-md-4 text-center">
-        <h4>Healthy</h4>
-        <p>Your recording indicates that you do not have COVID, or another type of illness.</p>
+      <div class="col-md-6 mb-3">
+        <div class="border rounded p-3 h-100">
+          <h5>Healthy</h5>
+          <p>Your recording indicates that you do not have COVID-19, though you may still be showing other symptoms. If in doubt, consult your local urgent care.</p>
+        </div>
       </div>
-      <!-- COVID-19 -->
-      <div class="col-md-4 text-center">
-        <h4>COVID-19</h4>
-        <p>
-          Your recording indicates that you are showing symptoms of COVID-19. If
-          you receive this result, please visit your local urgent care immediately
-          to receive further medical attention.
-        </p>
-      </div>
-      <!-- Symptomatic -->
-      <div class="col-md-4 text-center">
-        <h4>Symptomatic</h4>
-        <p>
-          Your recording indicates that you do not have symptoms of COVID-19,
-          but that you are displaying symptoms of a different illness. Please visit
-          your local urgent care for further attention.
-        </p>
+      <div class="col-md-6 mb-3">
+        <div class="border rounded p-3 h-100">
+          <h5>COVID-19</h5>
+          <p>Your recording indicates symptoms of COVID-19. Please visit your local urgent care immediately for further testing and treatment.</p>
+        </div>
       </div>
     </div>
-  </div>
-
-  <!-- Example Portal -->
-  <div class="mb-5">
-    <h3>Why Use VOCOVID?</h3>
-    <p>
-      VOCOVID presents results in a simple and easy-to-understand format to keep
-      you from stressing with a developing sickness. All results will be displayed
-      with an updating graph so you can see the progression of your illness in real time.
+    <p class="mt-3">
+      If you continue to upload recordings daily, VOCOVID will map out the progression
+      of your illness and even predict when you may experience new symptoms or recover.
     </p>
-    <!-- Placeholder for portal image -->
+    <p>
+      Reporting associated symptoms such as high fever, runny nose, or body aches
+      can further help you decide when to seek urgent medical attention.
+    </p>
+  </section>
+
+  <!-- How Do You Use VOCOVID? -->
+  <section class="mb-5">
+    <h3>How Do You Use VOCOVID?</h3>
+    <ol class="ps-4">
+      <ul>Navigate to our Login page and create an account.</ul>
+      <div class="text-center pb-5 ">
+        <img src="{% static 'img/login.png' %}" class="d-block mx-auto border border-secondary" alt="Login screen" width="55%">
+        <ul>Once logged in, you'll be directed to your dashboard to record your cough and log your symptoms.</ul>
+      </div>
+      <div class="text-center pb-5 border-1">
+        <img src="{% static 'img/dashboard.png' %}" class="d-block mx-auto border border-secondary" alt"Dashboard" width="55%">
+        <ul>VOCOVID will analyze your recording and alert you to any COVID-19 symptoms.</ul>
+      </div>
+    </ol>
+  </section>
+  
+  <!-- Additional Benefits -->
+  <section class="mb-5">
+    <h3>Track Your Health Over Time</h3>
+    <p>
+      VOCOVID presents your results in a simple, easy-to-understand format and
+      updates a real-time graph so you can monitor the progression of your illness.
+    </p>
+    <!-- Optional: screenshot or illustration -->
     <div class="text-center">
-      <p>(make an example of the portal page)</p>
-      <!-- <img src="/static/example_portal.png" alt="User Portal Example" class="img-fluid rounded shadow"> -->
+
+      <div class="text-center">
+        <img src="{% static 'img/results.png' %}" class="d-block mx-auto border border-secondary" alt"Rsults" width="55%">
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- Disclaimer -->
-  <div class="text-center mb-5">
+  <!-- Disclaimer & Footer Link -->
+  <section class="text-center mb-5">
     <p class="text-danger">
-      <strong>Disclaimer:</strong> VOCOVID is a screening tool and cannot provide an official COVID-19 diagnosis. Please consult a medical professional for an official diagnosis.
+      <strong>Disclaimer:</strong> VOCOVID is a screening tool and cannot provide
+      an official COVID-19 diagnosis. Please consult a medical professional for
+      an official diagnosis.
     </p>
-    
     <p>
-      For more information on how VOCOVID works, visit the research page
-
+      For more information on how VOCOVID works, visit our
+      <a href="{% url 'main:research' %}" style="text-decoration:None;">Research</a> page.
     </p>
-  </div>
-</div>
+  </section>
 
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock body %}
+
+
+
+
+
+
+
+
+

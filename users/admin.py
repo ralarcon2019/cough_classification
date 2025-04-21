@@ -44,5 +44,5 @@ class CustomUserAdmin(UserAdmin):
 class AnalysisResultAdmin(admin.ModelAdmin):
     list_display = ('user', 'timestamp', 'label', 'covid_prob', 'healthy_prob')
     list_filter = ('label', 'timestamp')
-
+    list_editable = ("timestamp", 'label')
 admin.site.register(User, CustomUserAdmin)  # Register the custom admin panel

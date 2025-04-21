@@ -15,6 +15,8 @@ import uuid
 import os
 from .ml_model import predict_cough
 from .models import AnalysisResult
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 from django.contrib.auth import login, logout
 # from users.models import AudioFile
@@ -32,7 +34,7 @@ User = get_user_model()
 
 
 # Create your views here.
-prob = .8
+prob = .88
 
 def register_view(request):
     if request.method == "POST":
@@ -66,7 +68,7 @@ def logout_view(request):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
-class DashboardInputView(View):
+class DashboardInputView(LoginRequiredMixin, View):
     """
     GET:  render the recording + questionnaire form
     POST: decode & save audio, run the CNN, save symptoms & result, redirect to results
@@ -76,9 +78,9 @@ class DashboardInputView(View):
     def get(self, request):
         context = {
             "fever_choices": [
-                ("no",   "No"),
-                ("mild", "Mild"),
-                ("high", "High"),
+                ("96-99",   "96-99"),
+                ("100-101", "100-101"),
+                ("101+", "101+"),
             ],
             "sore_throat_choices": [
                 ("no",     "No"),
@@ -96,8 +98,8 @@ class DashboardInputView(View):
                 ("very_low", "Very Low"),
             ],
             "headache_choices": [
-                ("no",   "no"),
-                ("mild",      "mild"),
+                ("no",   "No"),
+                ("mild",      "Mild"),
                 ("severe", "Very Low"),
             ],
             "muscle_aches_choices": [

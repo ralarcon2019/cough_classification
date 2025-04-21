@@ -3,6 +3,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django import forms
+from django.utils import timezone
+
 
 
 
@@ -71,7 +73,11 @@ class AnalysisResult(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              on_delete=models.CASCADE,
                              related_name='analysis_results')
-    timestamp = models.DateTimeField(auto_now_add=True)
+    # timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(
+        default=timezone.now,
+        help_text="When this result was recorded"
+    )
     healthy_prob = models.FloatField()
     covid_prob = models.FloatField()
     label = models.CharField(max_length=12,

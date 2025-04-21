@@ -118,7 +118,7 @@
                         <h5 class="card-title fw-bold">Milestone 5 (Mar)</h5>
                         <a href="{% url 'main:open_file' poster %}" class="btn btn-primary d-block mb-2"  role="button"> Poster </a>
                         <a href="{% url 'main:open_file' milestone5Pres %}" class="btn btn-primary d-block mb-2"  role="button"> Presentation </a>
-                        <a href="{% url 'main:open_file' milestone5Pres %}" class="btn btn-primary d-block mb-2"  role="button"> Progress Evaluation </a>
+                        <a href="{% url 'main:open_file' milestone5Eval %}" class="btn btn-primary d-block mb-2"  role="button"> Progress Evaluation </a>
                     </div>
                 </div>
             </div>
@@ -128,10 +128,10 @@
                 <div class="card h-100 shadow">
                     <div class="card-body">
                         <h5 class="card-title fw-bold">Milestone 6 (Apr)</h5>
-                        <a href="" class="btn btn-primary d-block mb-2 disabled"  role="button" aria-disabled="true"> User/Developer Manual </a>
+                        <a href="{% url 'main:open_file' userManual %}" class="btn btn-primary d-block mb-2"  role="button"> User/Developer Manual </a>
                         <a href="" class="btn btn-primary d-block mb-2 disabled"  role="button" aria-disabled="true"> Demo Video </a>
-                        <a href="" class="btn btn-primary d-block mb-2 disabled"  role="button" aria-disabled="true"> Presentation </a>
-                        <a href="" class="btn btn-primary d-block mb-2 disabled"  role="button" aria-disabled="true"> Progress Evaluation </a>
+                        <a href="{% url 'main:open_file' milestone6Pres %}" class="btn btn-primary d-block mb-2"  role="button"> Presentation </a>
+                        <a href="{% url 'main:open_file' milestone6Eval %}" class="btn btn-primary d-block mb-2"  role="button"> Progress Evaluation </a>
                     </div>
                 </div>
             </div>

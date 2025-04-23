@@ -96,6 +96,7 @@ WHITENOISE_AUTOREFRESH = DEBUG
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
 
+
 ROOT_URLCONF = "cough_classification.urls"
 
 TEMPLATES = [
@@ -216,6 +217,9 @@ if not DEBUG:
 #NEW CONTENT
 STATIC_URL = env.str("STATIC_URL", default="/static/")
 STATIC_ROOT = env.str("STATIC_ROOT", default=BASE_DIR / "staticfiles")
+
+
+# Tell Django where to look for static files
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
 

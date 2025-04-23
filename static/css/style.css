@@ -1,0 +1,138 @@
+/* Theme colors:
+White - #fefdff
+Light blue - #8eb1c7
+Dark blue - #094074
+Yellow - #ffbc42
+Orange - #fe9000
+ */
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan&display=swap');
+
+body {
+    font-family: 'League Spartan', sans-serif !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+a,
+li,
+span,
+div {
+    font-family: 'League Spartan', sans-serif !important;
+}
+
+/* Change the background color of the navbar */
+.navbar {
+    background-color: #094074 !important;
+    /* Dark blue */
+    color: #fefdff !important;
+    /* White */
+}
+
+h2 {
+    color: #094074 !important;
+    /* Dark blue */
+    font-weight: bold !important;
+}
+
+h2 important {
+    color: #094074 !important;
+    /* Dark blue */
+    font-weight: bold !important;
+}
+
+border.rounded.bg-light.text-center.py-3 {
+    background-color: #8eb1c7 !important;
+}
+
+/* Change background colors for the 3 feature boxes */
+section .row>div:nth-child(1) .p-4 {
+    background-color: #094074 !important;
+    /* 'Quick & Easy' */
+    color: #fefdff !important;
+}
+
+section .row>div:nth-child(2) .p-4 {
+    background-color: #8eb1c7 !important;
+    /* 'Accurate' */
+    color: #fefdff !important;
+}
+
+section .row>div:nth-child(3) .p-4 {
+    background-color: #fe9000 !important;
+    /* 'Non-Invasive' */
+    color: #fefdff !important;
+}
+
+/*Increase size of .p-4 on hover*/
+section .row>div:nth-child(1) .p-4:hover,
+section .row>div:nth-child(2) .p-4:hover,
+section .row>div:nth-child(3) .p-4:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+}
+
+/* Style the "Get Started" button */
+.text-center.mt-4 .btn.btn-primary {
+    background-color: #ffbc42 !important;
+    color: #094074 !important;
+    border: none !important;
+    animation: tilt-shaking 4s infinite alternate;
+}
+
+.text-center.mt-4 .btn.btn-primary:hover {
+    background-color: #094074 !important;
+    color: #fefdff !important;
+}
+
+/* Style milestone buttons */
+.btn-primary.d-block {
+    background-color: #fe9000 !important;
+    color: #094074 !important;
+    border: none !important;
+}
+
+.btn-primary.d-block:hover {
+    background-color: #094074 !important;
+    color: #fefdff !important;
+}
+
+/*Add a footer*/
+footer {
+    background-color: #094074 !important;
+    /* Dark blue */
+    color: #fefdff !important;
+    /* White */
+    padding: 20px 0;
+    text-align: center;
+}
+
+@keyframes tilt-shaking {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    1% {
+        transform: rotate(5deg);
+    }
+
+    2% {
+        transform: rotate(0eg);
+    }
+
+    3% {
+        transform: rotate(-5deg);
+    }
+
+    4% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}

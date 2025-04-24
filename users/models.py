@@ -83,6 +83,18 @@ class AnalysisResult(models.Model):
     label = models.CharField(max_length=12,
                              choices=LABEL_CHOICES)
 
+    status = models.CharField(max_length=50, blank=True)
+    breathing_difficulty = models.CharField(max_length=50, blank=True)
+    fever = models.CharField(max_length=50, blank=True)
+    sore_throat = models.CharField(max_length=50, blank=True)
+    energy_level = models.CharField(max_length=50, blank=True)
+    # audio_file = models.FileField(upload_to='audio/', blank=True, null=True)
+    # New field to store the symptoms data
+    # Save the file name as a string
+    audio_file_name = models.CharField(max_length=255, blank=True, null=True)
+
+    symptoms = models.JSONField(default=dict)
+    
     class Meta:
         ordering = ['timestamp']
 

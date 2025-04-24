@@ -1,11 +1,9 @@
 {% extends "layout.html" %} {% load static %} {% block title %}Dashboard - Input{% endblock %} {% block head_block %}
 <meta name="csrf-token" content="{{ csrf_token }}" />
 <style>
-    {% comment %} make it look greyed & ‘not‑allowed’ cursor, but still clickable {% endcomment %}
   .btn.disabled-look {
     opacity: 0.6;
     cursor: auto;
-    {% comment %} cursor: not-allowed; {% endcomment %}
   }
 
   #loadingOverlay {
@@ -28,9 +26,7 @@
     <div class="row mb-4">
       <div class="col-md-3 pb-4">
         <div class="border rounded bg-light text-center py-3">
-          <strong
-            >{{ request.user.first_name }} {{ request.user.last_name }}</strong
-          >
+          <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
         </div>
       </div>
     </div>

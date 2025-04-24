@@ -1,3 +1,4 @@
+from django.shortcuts import render
 import logging
 from .models import AudioFile
 from django.core.files.base import ContentFile
@@ -6,6 +7,8 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import AuthenticationForm
 from django.utils.decorators import method_decorator
+from django.core.files import File
+
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -83,33 +86,33 @@ class DashboardInputView(LoginRequiredMixin, View):
                 ("101+", "101+"),
             ],
             "sore_throat_choices": [
-                ("no",     "No"),
-                ("mild",   "Mild"),
-                ("severe", "Severe"),
+                ("No",     "No"),
+                ("Mild",   "Mild"),
+                ("Severe", "Severe"),
             ],
             "difficulty_breathing_choices": [
-                ("no",        "No"),
-                ("slight",    "Slight"),
-                ("significant", "Significant"),
+                ("No",        "No"),
+                ("Slight",    "Slight"),
+                ("Significant", "Significant"),
             ],
             "energy_level_choices": [
-                ("normal",   "Normal"),
-                ("low",      "Low"),
-                ("very_low", "Very Low"),
+                ("Normal",   "Normal"),
+                ("Low",      "Low"),
+                ("Very Low", "Very Low"),
             ],
             "headache_choices": [
-                ("no",   "No"),
-                ("mild",      "Mild"),
-                ("severe", "Very Low"),
+                ("No",   "No"),
+                ("Mild",      "Mild"),
+                ("Severe", "Very Low"),
             ],
             "muscle_aches_choices": [
-                ("no",   "No"),
-                ("mild",      "Mild"),
-                ("severe", "Severe"),
+                ("No",   "No"),
+                ("Mild",      "Mild"),
+                ("Severe", "Severe"),
             ],
             "nose_choices": [
-                ("no",   "No"),
-                ("yes",      "Yes"),
+                ("No",   "No"),
+                ("Yes",      "Yes"),
             ],
         }
         return render(request, self.template_name, context)
@@ -136,47 +139,68 @@ class DashboardInputView(LoginRequiredMixin, View):
         covid_p = results["covid"]
         if covid_p > prob:
             label = "covid"
-        # elif covid_p > 0.2:
-        #     label = "symptomatic"
         else:
             label = "healthy"
 
         # 4) Collect symptom answers
         symptoms = {
-            "fever":                request.POST.get("fever"),
-            "sore_throat":          request.POST.get("sore_throat"),
+            "fever": request.POST.get("fever"),
+            "sore_throat": request.POST.get("sore_throat"),
             "difficulty_breathing": request.POST.get("difficulty_breathing"),
-            "energy_level":         request.POST.get("energy_level"),
-            "headache":             request.POST.get("headache"),
-            "muscle_aches":         request.POST.get("muscle_aches"),
-            "nose":                 request.POST.get("nose"),
+            "energy_level": request.POST.get("energy_level"),
+            "headache": request.POST.get("headache"),
+            "muscle_aches": request.POST.get("muscle_aches"),
+            "nose": request.POST.get("nose"),
         }
 
         # 5) Persist the result to the database
-        AnalysisResult.objects.create(
-            user=request.user,
-            healthy_prob=results["healthy"],
-            covid_prob=results["covid"],
-            label=label
-        )
+        if wav_path:
+            with open(wav_path, "rb") as f:
+                # Wrap the file in Django's File object
 
-        # 6) Store latest in session for summary card
+
+                # Create the AnalysisResult object
+                AnalysisResult.objects.create(
+                    user=request.user,
+                    healthy_prob=results["healthy"],
+                    covid_prob=results["covid"],
+                    label=label,
+                    status=label,
+                    audio_file_name=filename,  # Save the file object in the model
+                    symptoms = symptoms
+                )
+
+        # 6) Store the latest results in session for the summary card
         request.session["cough_results"] = results
         request.session["symptoms"] = symptoms
 
         return redirect("users:dashboard_results")
     
+    
 class DashboardResultsView(View):
+    
+    
+    
+    
+    
     """
     GET: render the results page, showing the latest summary plus a timeline chart
     """
     template_name = "dashboard/results.html"
 
     def get(self, request):
+        
+        
+        
+        
+        
         # Pull the latest CNN run from session (for the top card)
         results = request.session.pop("cough_results", None)
         symptoms = request.session.pop("symptoms", {})
 
+        # Debugging print statements to check session data
+        print("Results in session:", results)
+        print("Symptoms in session:", symptoms)
         if results is None:
             return redirect("users:dashboard_input")
 
@@ -188,6 +212,10 @@ class DashboardResultsView(View):
         # Build the timeline from all past AnalysisResult objects
         history = AnalysisResult.objects.filter(user=request.user)
 
+        # for result in history:
+        #     print(f"Symptoms for result {result.id}: {result.symptoms}")
+
+        
         timeline_dates = [
             ar.timestamp.strftime("%Y-%m-%d %H:%M")
             for ar in history
@@ -208,7 +236,16 @@ class DashboardResultsView(View):
             "chart_dates":  timeline_dates,
             "chart_vals":   timeline_vals,
             "symptoms":     symptoms,
+            "history": history,
+            "MEDIA_URL": settings.MEDIA_URL
         }
+        
+        
+        
+        
+        
+  
+        
         return render(request, self.template_name, context)
 
 
@@ -255,3 +292,11 @@ def upload_audio(request):
 def record_audio(request):
     saved_audio = AudioFile.objects.filter(user=request.user)
     return render(request, "users/record_audio.html", {"saved_audio": saved_audio})
+
+
+def results_view(request):
+    results = AnalysisResult.objects.all()  # Retrieve your data here
+    # This will show up in the terminal to check if results are being passed
+    print("Results:", results)
+
+    return render(request, 'results.html', {'results': results})

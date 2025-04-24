@@ -16,7 +16,6 @@ h2,
 h3,
 h4,
 h5,
-h6,
 p,
 a,
 li,
@@ -135,4 +134,65 @@ footer {
     100% {
         transform: translateX(0);
     }
+}
+
+
+.result-section {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.analysis-results {
+    width: 100%;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.result-block {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.result-details {
+    margin-bottom: 15px;
+}
+
+audio {
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* Ensure proper styling for the cards */
+.card {
+    margin-bottom: 15px;
+}
+
+.card-header {
+    font-weight: bold;
+}
+
+/* Make audio controls and symptoms section align properly */
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-body audio {
+    width: 100%;
+}
+
+.custom-bg-color {
+    background-color: #6994c2;
+    color: white;
 }

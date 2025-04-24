@@ -1,5 +1,8 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
+
 
 app_name = 'users'
 
@@ -15,10 +18,9 @@ urlpatterns = [
     
     
     path("dashboard/", views.DashboardInputView.as_view(), name="dashboard_input"),
-    path("dashboard/results/", views.DashboardResultsView.as_view(),
-         name="dashboard_results"),
+    path("dashboard/results/", views.DashboardResultsView.as_view(),name="dashboard_results"),
 
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
 

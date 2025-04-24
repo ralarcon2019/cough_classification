@@ -3,22 +3,31 @@
 {% endblock %} {% block title %}Analysis History{% endblock %} {% block body %}
 <div class="container my-5">
   <!-- Name row -->
-  <div class="row mb-4">
-    <div class="col-md-3">
-      <div class="border rounded bg-light text-center py-3">
-        <strong
-          >{{ request.user.first_name }} {{ request.user.last_name }}</strong
-        >
-      </div>
+<div class="row mb-4">
+  <!-- User's Name Section -->
+  <div class="col-md-9">
+    <div class="col-md-3 border rounded bg-light text-center py-3">
+      <strong>{{ request.user.first_name }} {{ request.user.last_name }}</strong>
     </div>
   </div>
+
+  <!-- Button Section aligned to the right -->
+  <div class="col-md-3 d-flex justify-content-end align-items-center">
+    <a href="{% url 'users:dashboard_input' %}" class="btn btn-primary btn-lg">
+      Add new entry
+    </a>
+  </div>
+</div>
+
+
+  
+
 
   <!-- Status summary row -->
   <div class="row mb-4">
     <div class="col-12">
       <div
-        class="card mb-4 p-4 text-center {% if status.label == 'No COVID' %} border-success text-success bg-success bg-opacity-10 {% elif status.label == 'COVID Likely' %} border-warning text-warning bg-warning bg-opacity-10 {% endif %}"
-      >
+        class="card mb-4 p-4 text-center {% if status.label == 'No COVID' %} border-success text-success bg-success bg-opacity-10 {% elif status.label == 'COVID Likely' %} border-warning text-warning bg-warning bg-opacity-10 {% endif %}">
         <h4>Latest Result: {{ status.label }}</h4>
         <p>{{ status.confidence }}% Confidence</p>
         <small>at {{ status.timestamp|date:"M d, Y H:i" }}</small>
@@ -35,8 +44,7 @@
         <!-- Chart gets a fixed height here -->
         <div
           class="chart-container mb-3"
-          style="position: relative; height: 250px; width: 100%"
-        >
+          style="position: relative; height: 250px; width: 100%">
           <canvas id="recordingTimelineChart"></canvas>
         </div>
 
@@ -46,22 +54,19 @@
             <button
               type="button"
               class="btn btn-outline-primary active"
-              data-range="all"
-            >
+              data-range="all">
               All Time
             </button>
             <button
               type="button"
               class="btn btn-outline-primary"
-              data-range="7"
-            >
+              data-range="7">
               Last 7 Days
             </button>
             <button
               type="button"
               class="btn btn-outline-primary"
-              data-range="3"
-            >
+              data-range="3">
               Last 3 Days
             </button>
           </div>
@@ -70,6 +75,98 @@
     </div>
   </div>
 
+
+
+  <div class="card">
+    <div class="card-header">Latest Analysis Results</div>
+    {% for result in history %}
+    <div class="card shadow m-2">
+      <div class="card-body">
+        <div class="row mb-3">
+          <!-- Status and Date & Time - Stacked on top of each other -->
+          <div class="col-md-3">
+            <div class="card p-3 {% if status.label == 'No COVID' %} border-success text-success bg-success bg-opacity-10 {% elif status.label == 'COVID Likely' %} border-warning text-warning bg-warning bg-opacity-10 {% endif %}">
+              <h5>Status: {{ status.label }}</h5>
+              <p>{{ status.confidence }}% Confidence</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card p-3" style="background-color: #d1e7f3">
+              <h5>Date & Time</h5>
+              <p>{{ status.timestamp|date:"M d, Y H:i" }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Symptoms - Filling the space dynamically -->
+          {% for symptom, value in result.symptoms.items %}
+            <div class="card symptom-block col-sm-2 p-2 m-2">
+              <strong>{{ symptom|capfirst }}:</strong> {{ value }}
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-12">
+            <audio controls>
+              <source
+                src="{{ MEDIA_URL }}{{ result.audio_file_name }}"
+                type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+          <p>No results available.</p>
+    {% endfor %}
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Analysis Results Section -->
+  <!-- <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">Latest Analysis Results</div>
+        <div class="card-body">
+          {% for result in history %}
+          <div class="result-block mb-3">
+            <h5>Status: {{ result.status }}</h5>
+            <p><strong>Breathing Difficulty:</strong> {{ symptoms.difficulty_breathing }}</p>
+            <p><strong>Fever:</strong> {{ symptoms.fever }}</p>
+            <p><strong>Sore Throat:</strong> {{ symptoms.sore_throat }}</p>
+            <p><strong>Energy Level:</strong> {{ symptoms.energy_level }}</p>
+            <p><strong>Date & Time:</strong> {{ result.timestamp }}</p>
+
+
+            <audio controls>
+              <source src="{{ MEDIA_URL }}{{ result.audio_file_name }}" type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+          {% empty %}
+          <p>No results available.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div> -->
 </div>
 <!-- /.container -->
 
@@ -161,4 +258,4 @@
     recordingChart.update();
   });
 </script>
-{% endblock %} 
+{% endblock %}

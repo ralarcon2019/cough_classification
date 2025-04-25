@@ -144,13 +144,13 @@ class DashboardInputView(LoginRequiredMixin, View):
 
         # 4) Collect symptom answers
         symptoms = {
-            "fever": request.POST.get("fever"),
-            "sore_throat": request.POST.get("sore_throat"),
-            "difficulty_breathing": request.POST.get("difficulty_breathing"),
-            "energy_level": request.POST.get("energy_level"),
-            "headache": request.POST.get("headache"),
-            "muscle_aches": request.POST.get("muscle_aches"),
-            "nose": request.POST.get("nose"),
+            "Fever": request.POST.get("fever"),
+            "Sore Throat": request.POST.get("sore_throat"),
+            "Difficulty Breathing": request.POST.get("difficulty_breathing"),
+            "Energy Level": request.POST.get("energy_level"),
+            "Headache": request.POST.get("headache"),
+            "Muscle Aches": request.POST.get("muscle_aches"),
+            "Runny Nose": request.POST.get("nose"),
         }
 
         # 5) Persist the result to the database
